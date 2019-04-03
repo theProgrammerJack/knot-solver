@@ -1,7 +1,4 @@
-use std::{
-    str::FromStr,
-    collections::HashSet,
-};
+use std::{collections::HashSet, str::FromStr};
 
 struct Knot {
     crossings: Vec<Crossing>,
@@ -37,12 +34,19 @@ impl RegionCounter {
     }
 
     pub fn combine(&mut self, first: usize, second: usize) {
-        let temp: Vec<&HashSet<usize>> = self.regions.iter().filter(|r| r.contains(&first) || r.contains(&second)).collect();
+        let mut temp: Vec<&mut HashSet<usize>> = self
+            .regions
+            .iter_mut()
+            .filter(|r| r.contains(&first) || r.contains(&second))
+            .collect();
         if temp.len() >= 2 {
             self.count -= 1;
 
-            let new_set = temp.iter().fold(HashSet::new(), |acc, e| acc.union(e).cloned().collect());
-            self.regions.retain(|r| !(r.contains(&first) || r.contains(&second)));
+            let new_set = temp
+                .iter()
+                .fold(HashSet::new(), |acc, e| acc.union(e).cloned().collect());
+            self.regions
+                .retain(|r| !(r.contains(&first) || r.contains(&second)));
             self.regions.push(new_set);
         } else if temp.is_empty() {
             self.count -= 1;
@@ -51,6 +55,11 @@ impl RegionCounter {
             set.insert(first);
             set.insert(second);
             self.regions.push(set);
+        } else {
+            let set = temp.pop().unwrap();
+            if set.insert(first) || set.insert(second) {
+                self.count -= 1;
+            }
         }
     }
 
@@ -82,8 +91,15 @@ mod tests {
 
             counter.combine(3, 4);
             assert_eq!(5, counter.current_count());
+
+            counter.combine(4, 5);
+            assert_eq!(4, counter.current_count());
+
+            counter.combine(4, 5);
+            assert_eq!(4, counter.current_count());
+
+            counter.combine(4, 1);
+            assert_eq!(3, counter.current_count());
         }
-
-
     }
 }
