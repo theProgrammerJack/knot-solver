@@ -24,9 +24,7 @@ fn basic_benchmark(c: &mut Criterion) {
     c.bench_function("rand test", |b| {
         let mut rng = rand::thread_rng();
 
-        b.iter(move || {
-            rng.gen_range(1usize, 250)
-        })
+        b.iter(move || rng.gen_range(1usize, 250))
     });
 }
 
