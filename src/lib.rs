@@ -213,14 +213,15 @@ mod tests {
         }
     }
 
-    #[allow(non_snake_case)]
     mod knot_parsing {
+        #![allow(non_snake_case)]
+
         use crate::Knot;
         use std::str::FromStr;
 
         #[test]
         fn basics() {
-            let _knot = Knot::from_str("aaabacba").unwrap();
+            let _knot = Knot::from_str("aaabacbadehfg").unwrap();
 
             let a = Knot::from_str("a").unwrap();
             assert_eq!(a.num_regions(), 3);
