@@ -1,71 +1,91 @@
 use std::{collections::HashSet, str::FromStr};
 
-struct Knot {
+pub struct Knot {
     crossings: Vec<Crossing>,
     region_num: usize,
+}
+
+impl Knot {
+    pub fn num_regions(&self) -> usize {
+        self.region_num
+    }
+
+    pub fn num_crossings(&self) -> usize {
+        self.crossings.len()
+    }
 }
 
 impl FromStr for Knot {
     type Err = KnotParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        unimplemented!();
-
         let bad_chars: Vec<char> = s.chars().filter(|c| !c.is_ascii_alphabetic()).collect();
         if !bad_chars.is_empty() {
             Err(KnotParseError::InvalidCharacter(bad_chars))
         } else {
-            let mut crossing_builders: Vec<CrossingBuilder> = s.chars().map(|c| {
-                let c = c.to_ascii_lowercase() as u8;
-                let column = c - 97; // 97 -> 'a' on the ascii table
+            let mut crossing_builders: Vec<CrossingBuilder> = s
+                .chars()
+                .map(|c| {
+                    let c = c.to_ascii_lowercase() as u8;
+                    let column = c - 97; // 97 -> 'a' on the ascii table
 
-                CrossingBuilder::new(column)
-            }).collect();
+                    CrossingBuilder::new(column)
+                })
+                .collect();
             // TODO: Verify no missing column indices
 
-            let max_column = crossing_builders.iter().max_by_key(|cb| cb.column).unwrap().column;
-
+            let max_column = crossing_builders
+                .iter()
+                .max_by_key(|cb| cb.column)
+                .unwrap()
+                .column;
 
             let mut index = 2;
             for i in 0..crossing_builders.len() {
-                let mut builder = crossing_builders[i];
-
-                if builder.column == 0 {
-                    builder.left = Some(0);
-                } else if builder.column == max_column {
-                    builder.right = Some(1);
+                if crossing_builders[i].column == 0 {
+                    crossing_builders[i].left = Some(0);
+                }
+                // can't have an else here in case there is only one column.
+                if crossing_builders[i].column == max_column {
+                    crossing_builders[i].right = Some(1);
                 }
 
-                if builder.bottom.is_none() {
-                    builder.bottom = Some(index);
+                if crossing_builders[i].bottom.is_none() {
+                    crossing_builders[i].bottom = Some(index);
                     for j in 0..crossing_builders.len() {
                         let j = j + i + 1;
                         let j = j % crossing_builders.len();
 
-                        let mut builder2 = crossing_builders[j];
-
-                        if builder2.column == builder.column {
-                            builder2.top = Some(index);
+                        if crossing_builders[j].column == crossing_builders[i].column {
+                            crossing_builders[j].top = Some(index);
                             index += 1;
                             break;
-                        } else if builder.column < builder2.column && builder2.column - builder.column == 1 {
-                            builder2.left = Some(index);
-                        } else if builder2.column < builder.column && builder.column - builder2.column == 1 {
-                            builder2.right = Some(index);
+                        } else if crossing_builders[i].column < crossing_builders[j].column
+                            && crossing_builders[j].column - crossing_builders[i].column == 1
+                        {
+                            crossing_builders[j].left = Some(index);
+                        } else if crossing_builders[j].column < crossing_builders[i].column
+                            && crossing_builders[i].column - crossing_builders[j].column == 1
+                        {
+                            crossing_builders[j].right = Some(index);
                         }
                     }
                 }
             }
 
             Ok(Knot {
-                crossings: crossing_builders.into_iter().map(|c| c.build().unwrap()).collect(),
+                crossings: crossing_builders
+                    .into_iter()
+                    .map(|c| c.build().unwrap())
+                    .collect(),
                 region_num: index,
             })
         }
     }
 }
 
-enum KnotParseError {
+#[derive(Debug)]
+pub enum KnotParseError {
     InvalidCharacter(Vec<char>),
 }
 
@@ -77,6 +97,7 @@ struct Crossing {
     column: u8,
 }
 
+#[derive(Debug)]
 struct CrossingBuilder {
     top: Option<usize>,
     bottom: Option<usize>,
@@ -189,6 +210,29 @@ mod tests {
 
             counter.combine(4, 1);
             assert_eq!(3, counter.current_count());
+        }
+    }
+
+    #[allow(non_snake_case)]
+    mod knot_parsing {
+        use crate::Knot;
+        use std::str::FromStr;
+
+        #[test]
+        fn basics() {
+            let _knot = Knot::from_str("aaabacba").unwrap();
+
+            let a = Knot::from_str("a").unwrap();
+            assert_eq!(a.num_regions(), 3);
+
+            let abb = Knot::from_str("abb").unwrap();
+            assert_eq!(abb.num_regions(), 5);
+
+            let abbaabb = Knot::from_str("abbaabb").unwrap();
+            assert_eq!(abbaabb.num_regions(), 9);
+
+            let abcB = Knot::from_str("abcB").unwrap();
+            assert_eq!(abcB.num_regions(), 6);
         }
     }
 }
