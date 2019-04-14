@@ -1,3 +1,4 @@
+use bitvec::{BitVec, LittleEndian};
 use std::{collections::HashSet, str::FromStr};
 
 pub struct Knot {
@@ -13,6 +14,35 @@ impl Knot {
     pub fn num_crossings(&self) -> usize {
         self.crossings.len()
     }
+
+    fn resolutions(&self) -> Vec<usize> {
+        let r = (0u128..(2u128.pow(self.num_crossings() as u32)));
+        r.map(|n| {
+            let bits: BitVec<LittleEndian, _> = BitVec::from(&n.to_le_bytes()[..]);
+            let mut counter = RegionCounter::new(self.num_regions());
+            self.crossings
+                .iter()
+                .zip(bits.iter())
+                .for_each(|(crossing, bit)| match crossing.orientation {
+                    Orientation::Over => {
+                        if bit {
+                            counter.combine(crossing.left, crossing.right)
+                        } else {
+                            counter.combine(crossing.top, crossing.bottom)
+                        }
+                    }
+                    Orientation::Under => {
+                        if bit {
+                            counter.combine(crossing.top, crossing.bottom)
+                        } else {
+                            counter.combine(crossing.left, crossing.right)
+                        }
+                    }
+                });
+            counter.current_count()
+        })
+        .collect()
+    }
 }
 
 impl FromStr for Knot {
@@ -26,10 +56,15 @@ impl FromStr for Knot {
             let mut crossing_builders: Vec<CrossingBuilder> = s
                 .chars()
                 .map(|c| {
+                    let orientation = if c.is_ascii_lowercase() {
+                        Orientation::Over
+                    } else {
+                        Orientation::Under
+                    };
                     let c = c.to_ascii_lowercase() as u8;
                     let column = c - 97; // 97 -> 'a' on the ascii table
 
-                    CrossingBuilder::new(column)
+                    CrossingBuilder::new(column, orientation)
                 })
                 .collect();
             // TODO: Verify no missing column indices
@@ -89,12 +124,20 @@ pub enum KnotParseError {
     InvalidCharacter(Vec<char>),
 }
 
+#[derive(Debug)]
 struct Crossing {
     top: usize,
     bottom: usize,
     left: usize,
     right: usize,
     column: u8,
+    orientation: Orientation,
+}
+
+#[derive(Copy, Clone, Debug)]
+enum Orientation {
+    Over,
+    Under,
 }
 
 #[derive(Debug)]
@@ -104,6 +147,7 @@ struct CrossingBuilder {
     left: Option<usize>,
     right: Option<usize>,
     column: u8,
+    orientation: Orientation,
 }
 
 impl CrossingBuilder {
@@ -114,18 +158,20 @@ impl CrossingBuilder {
             left: self.left.ok_or(())?,
             right: self.right.ok_or(())?,
             column: self.column,
+            orientation: self.orientation,
         })
     }
 }
 
 impl CrossingBuilder {
-    fn new(column: u8) -> Self {
+    fn new(column: u8, orientation: Orientation) -> Self {
         Self {
             top: None,
             bottom: None,
             left: None,
             right: None,
             column,
+            orientation,
         }
     }
 }
@@ -144,6 +190,9 @@ impl RegionCounter {
     }
 
     pub fn combine(&mut self, first: usize, second: usize) {
+        if first == second {
+            return;
+        }
         let mut temp: Vec<&mut HashSet<usize>> = self
             .regions
             .iter_mut()
@@ -234,6 +283,18 @@ mod tests {
 
             let abcB = Knot::from_str("abcB").unwrap();
             assert_eq!(abcB.num_regions(), 6);
+        }
+    }
+
+    mod resolving {
+        use crate::Knot;
+        use std::str::FromStr;
+
+        #[test]
+        fn basics() {
+            let knot = Knot::from_str("abc").unwrap();
+
+            println!("{:?}", knot.resolutions());
         }
     }
 }

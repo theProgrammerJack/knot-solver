@@ -5,6 +5,7 @@ authors = ["Jack Greenberg <theProgrammerJack@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+bitvec = "0.10.1"
 
 [dev-dependencies]
 criterion = "0.2"
