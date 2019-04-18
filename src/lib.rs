@@ -1,22 +1,27 @@
 use bitvec::{BitVec, LittleEndian};
 use std::{collections::HashSet, str::FromStr};
 
+/// Represents a knot.
 pub struct Knot {
     crossings: Vec<Crossing>,
     region_num: usize,
 }
 
 impl Knot {
+    /// Returns the number of regions in the unresolved knot.
     pub fn num_regions(&self) -> usize {
         self.region_num
     }
 
+    /// Returns the number of crossings in the knot.
     pub fn num_crossings(&self) -> usize {
         self.crossings.len()
     }
 
+    /// Iterates over all possible resolutions of the knot, returning a `Vec<usize>` containing the
+    /// number of unknots in each.
     fn resolutions(&self) -> Vec<usize> {
-        let r = (0u128..(2u128.pow(self.num_crossings() as u32)));
+        let r = 0u128..(2u128.pow(self.num_crossings() as u32));
         r.map(|n| {
             let bits: BitVec<LittleEndian, _> = BitVec::from(&n.to_le_bytes()[..]);
             let mut counter = RegionCounter::new(self.num_regions());
@@ -39,7 +44,7 @@ impl Knot {
                         }
                     }
                 });
-            counter.current_count()
+            counter.current_count() - 1
         })
         .collect()
     }
@@ -48,6 +53,7 @@ impl Knot {
 impl FromStr for Knot {
     type Err = KnotParseError;
 
+    /// Attemps to create a `Knot` from a input `str`.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let bad_chars: Vec<char> = s.chars().filter(|c| !c.is_ascii_alphabetic()).collect();
         if !bad_chars.is_empty() {
@@ -124,6 +130,7 @@ pub enum KnotParseError {
     InvalidCharacter(Vec<char>),
 }
 
+/// Represents one crossing of two strands in a knot.
 #[derive(Debug)]
 struct Crossing {
     top: usize,
@@ -134,12 +141,14 @@ struct Crossing {
     orientation: Orientation,
 }
 
+/// The two possible orientations for a `Crossing`.
 #[derive(Copy, Clone, Debug)]
 enum Orientation {
     Over,
     Under,
 }
 
+/// A struct used to represent a `Crossing` still in the process of being parsed.
 #[derive(Debug)]
 struct CrossingBuilder {
     top: Option<usize>,
@@ -151,6 +160,7 @@ struct CrossingBuilder {
 }
 
 impl CrossingBuilder {
+    /// Attempts to create a `Crossing`.
     fn build(self) -> Result<Crossing, ()> {
         Ok(Crossing {
             top: self.top.ok_or(())?,
@@ -161,9 +171,8 @@ impl CrossingBuilder {
             orientation: self.orientation,
         })
     }
-}
 
-impl CrossingBuilder {
+    /// Creates a new `CrossingBuilder` with the given `column` number and `orientation`.
     fn new(column: u8, orientation: Orientation) -> Self {
         Self {
             top: None,
@@ -176,12 +185,14 @@ impl CrossingBuilder {
     }
 }
 
+/// A utility for combining regions in an efficient manner.
 pub struct RegionCounter {
     count: usize,
     regions: Vec<HashSet<usize>>,
 }
 
 impl RegionCounter {
+    /// Creates a new `RegionCounter` with `start` as the initial number of regions.
     pub fn new(start: usize) -> Self {
         Self {
             count: start,
@@ -189,6 +200,7 @@ impl RegionCounter {
         }
     }
 
+    /// Combines the two regions passed in, reducing the total count if necessary.
     pub fn combine(&mut self, first: usize, second: usize) {
         if first == second {
             return;
@@ -222,6 +234,7 @@ impl RegionCounter {
         }
     }
 
+    /// Returns the current number of regions counted.
     fn current_count(&self) -> usize {
         self.count
     }
@@ -242,22 +255,37 @@ mod tests {
             let mut counter = RegionCounter::new(7);
             assert_eq!(7, counter.current_count());
 
+            // Combining a region with itself at the beginning should have no effect.
+            counter.combine(1, 1);
+            assert_eq!(7, counter.current_count());
+            counter.combine(2, 2);
+            assert_eq!(7, counter.current_count());
+            counter.combine(3, 3);
+            assert_eq!(7, counter.current_count());
+
+            // Combining two uncombined regions should decrement the count.
             counter.combine(1, 2);
             assert_eq!(6, counter.current_count());
 
+            // Combining regions that have already been combined should have no effect
             counter.combine(1, 2);
             assert_eq!(6, counter.current_count());
 
+            // Combining two uncombined regions should decrement the count.
             counter.combine(3, 4);
             assert_eq!(5, counter.current_count());
 
             counter.combine(4, 5);
             assert_eq!(4, counter.current_count());
 
+            // Combining regions that have already been combined should have no effect
             counter.combine(4, 5);
             assert_eq!(4, counter.current_count());
 
             counter.combine(4, 1);
+            assert_eq!(3, counter.current_count());
+
+            counter.combine(5, 2);
             assert_eq!(3, counter.current_count());
         }
     }
