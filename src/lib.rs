@@ -48,18 +48,83 @@ impl Knot {
         })
         .collect()
     }
+
+    fn from_crossing_builders(mut crossing_builders: Vec<CrossingBuilder>) -> Self {
+        let max_column = crossing_builders
+            .iter()
+            .max_by_key(|cb| cb.column)
+            .unwrap()
+            .column;
+
+        let missing: Vec<u8> = (0..max_column)
+            .filter(|x| !crossing_builders.iter().any(|cb| cb.column == *x))
+            .collect();
+
+        let mut index = 2;
+        for i in 0..crossing_builders.len() {
+            if crossing_builders[i].column == 0 {
+                crossing_builders[i].left = Some(0);
+            }
+            // can't have an else here in case there is only one column.
+            if crossing_builders[i].column == max_column {
+                crossing_builders[i].right = Some(1);
+            }
+
+            if crossing_builders[i].bottom.is_none() {
+                crossing_builders[i].bottom = Some(index);
+                for j in 0..crossing_builders.len() {
+                    let j = j + i + 1;
+                    let j = j % crossing_builders.len();
+
+                    if crossing_builders[j].column == crossing_builders[i].column {
+                        crossing_builders[j].top = Some(index);
+                        index += 1;
+                        break;
+                    } else if crossing_builders[i].column < crossing_builders[j].column
+                        && crossing_builders[j].column - crossing_builders[i].column == 1
+                    {
+                        crossing_builders[j].left = Some(index);
+                    } else if crossing_builders[j].column < crossing_builders[i].column
+                        && crossing_builders[i].column - crossing_builders[j].column == 1
+                    {
+                        crossing_builders[j].right = Some(index);
+                    }
+                }
+            }
+        }
+
+        for column in missing {
+            crossing_builders
+                .iter_mut()
+                .filter(|cb| cb.column == column + 1)
+                .for_each(|cb| cb.left = Some(index));
+            crossing_builders
+                .iter_mut()
+                .filter(|cb| cb.column == column - 1)
+                .for_each(|cb| cb.right = Some(index));
+            index += 1;
+        }
+
+        Knot {
+            crossings: crossing_builders
+                .into_iter()
+                .map(|c| c.build().unwrap())
+                .collect(),
+            region_num: index,
+        }
+    }
 }
 
 impl FromStr for Knot {
     type Err = KnotParseError;
 
-    /// Attemps to create a `Knot` from a input `str`.
+    /// Attempts to create a `Knot` from a input `str`.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let bad_chars: Vec<char> = s.chars().filter(|c| !c.is_ascii_alphabetic()).collect();
         if !bad_chars.is_empty() {
             Err(KnotParseError::InvalidCharacter(bad_chars))
         } else {
-            let mut crossing_builders: Vec<CrossingBuilder> = s
+            let crossing_builders: Vec<CrossingBuilder> = s
                 .chars()
                 .map(|c| {
                     let orientation = if c.is_ascii_lowercase() {
@@ -73,54 +138,8 @@ impl FromStr for Knot {
                     CrossingBuilder::new(column, orientation)
                 })
                 .collect();
-            // TODO: Verify no missing column indices
 
-            let max_column = crossing_builders
-                .iter()
-                .max_by_key(|cb| cb.column)
-                .unwrap()
-                .column;
-
-            let mut index = 2;
-            for i in 0..crossing_builders.len() {
-                if crossing_builders[i].column == 0 {
-                    crossing_builders[i].left = Some(0);
-                }
-                // can't have an else here in case there is only one column.
-                if crossing_builders[i].column == max_column {
-                    crossing_builders[i].right = Some(1);
-                }
-
-                if crossing_builders[i].bottom.is_none() {
-                    crossing_builders[i].bottom = Some(index);
-                    for j in 0..crossing_builders.len() {
-                        let j = j + i + 1;
-                        let j = j % crossing_builders.len();
-
-                        if crossing_builders[j].column == crossing_builders[i].column {
-                            crossing_builders[j].top = Some(index);
-                            index += 1;
-                            break;
-                        } else if crossing_builders[i].column < crossing_builders[j].column
-                            && crossing_builders[j].column - crossing_builders[i].column == 1
-                        {
-                            crossing_builders[j].left = Some(index);
-                        } else if crossing_builders[j].column < crossing_builders[i].column
-                            && crossing_builders[i].column - crossing_builders[j].column == 1
-                        {
-                            crossing_builders[j].right = Some(index);
-                        }
-                    }
-                }
-            }
-
-            Ok(Knot {
-                crossings: crossing_builders
-                    .into_iter()
-                    .map(|c| c.build().unwrap())
-                    .collect(),
-                region_num: index,
-            })
+            Ok(Knot::from_crossing_builders(crossing_builders))
         }
     }
 }
@@ -312,6 +331,18 @@ mod tests {
             let abcB = Knot::from_str("abcB").unwrap();
             assert_eq!(abcB.num_regions(), 6);
         }
+
+        #[test]
+        fn mising_columns() {
+            let ac = Knot::from_str("ac").unwrap();
+            assert_eq!(ac.num_regions(), 5);
+
+            let ace = Knot::from_str("ace").unwrap();
+            assert_eq!(ace.num_regions(), 7);
+
+            let acd = Knot::from_str("acd").unwrap();
+            assert_eq!(acd.num_regions(), 6);
+        }
     }
 
     mod resolving {
@@ -322,7 +353,16 @@ mod tests {
         fn basics() {
             let knot = Knot::from_str("abc").unwrap();
 
-            println!("{:?}", knot.resolutions());
+            let mut resolutions = knot.resolutions();
+            println!("{:?}", resolutions);
+            resolutions.sort();
+            assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
+
+            let knot = Knot::from_str("acb").unwrap();
+            let mut resolutions = knot.resolutions();
+            println!("{:?}", resolutions);
+            resolutions.sort();
+            assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
         }
     }
 }
