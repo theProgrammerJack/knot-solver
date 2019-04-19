@@ -98,10 +98,12 @@ impl Knot {
                 .iter_mut()
                 .filter(|cb| cb.column == column + 1)
                 .for_each(|cb| cb.left = Some(index));
-            crossing_builders
-                .iter_mut()
-                .filter(|cb| cb.column == column - 1)
-                .for_each(|cb| cb.right = Some(index));
+            if column != 0 {
+                crossing_builders
+                    .iter_mut()
+                    .filter(|cb| cb.column == column - 1)
+                    .for_each(|cb| cb.right = Some(index));
+            }
             index += 1;
         }
 
@@ -333,7 +335,7 @@ mod tests {
         }
 
         #[test]
-        fn mising_columns() {
+        fn missing_columns() {
             let ac = Knot::from_str("ac").unwrap();
             assert_eq!(ac.num_regions(), 5);
 
@@ -342,6 +344,12 @@ mod tests {
 
             let acd = Knot::from_str("acd").unwrap();
             assert_eq!(acd.num_regions(), 6);
+
+            let bc = Knot::from_str("bc").unwrap();
+            assert_eq!(bc.num_regions(), 5);
+
+            let b = Knot::from_str("b").unwrap();
+            assert_eq!(b.num_regions(), 4);
         }
     }
 
@@ -363,6 +371,24 @@ mod tests {
             println!("{:?}", resolutions);
             resolutions.sort();
             assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
+        }
+
+        #[test]
+        fn missing_columns() {
+            let knot = Knot::from_str("b").unwrap();
+            let mut resolutions = knot.resolutions();
+            resolutions.sort();
+            assert_eq!(resolutions, vec![2, 3]);
+
+            let knot = Knot::from_str("bc").unwrap();
+            let mut resolutions = knot.resolutions();
+            resolutions.sort();
+            assert_eq!(resolutions, vec![2, 3, 3, 4]);
+
+            let knot = Knot::from_str("bd").unwrap();
+            let mut resolutions = knot.resolutions();
+            resolutions.sort();
+            assert_eq!(resolutions, vec![3, 4, 4, 5]);
         }
     }
 }
