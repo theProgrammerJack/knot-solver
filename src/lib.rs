@@ -18,33 +18,33 @@ impl Knot {
         self.crossings.len()
     }
 
-    /// Iterates over all possible resolutions of the knot, returning a `Vec<usize>` containing the
-    /// number of unknots in each.
-    fn resolutions(&self) -> Vec<usize> {
+    /// Iterates over all possible resolutions of the knot, returning a `Vec<(usize, i16)>` containing the
+    /// number of unknots in each and the difference between the number of 0 and infinity resolutions taken.
+    fn resolutions(&self) -> Vec<(usize, i16)> {
         let r = 0u128..(2u128.pow(self.num_crossings() as u32));
         r.map(|n| {
+            let mut diff: i16 = 0;
             let bits: BitVec<LittleEndian, _> = BitVec::from(&n.to_le_bytes()[..]);
             let mut counter = RegionCounter::new(self.num_regions());
             self.crossings
                 .iter()
                 .zip(bits.iter())
-                .for_each(|(crossing, bit)| match crossing.orientation {
-                    Orientation::Over => {
-                        if bit {
-                            counter.combine(crossing.left, crossing.right)
-                        } else {
-                            counter.combine(crossing.top, crossing.bottom)
+                .for_each(|(crossing, bit)| {
+                    if bit {
+                        diff += 1; // TODO: might need to switch
+                        match crossing.orientation {
+                            Orientation::Over => counter.combine(crossing.left, crossing.right),
+                            Orientation::Under => counter.combine(crossing.top, crossing.bottom),
                         }
-                    }
-                    Orientation::Under => {
-                        if bit {
-                            counter.combine(crossing.top, crossing.bottom)
-                        } else {
-                            counter.combine(crossing.left, crossing.right)
+                    } else {
+                        diff -= 1; // TODO: might need to switch
+                        match crossing.orientation {
+                            Orientation::Over => counter.combine(crossing.top, crossing.bottom),
+                            Orientation::Under => counter.combine(crossing.left, crossing.right),
                         }
                     }
                 });
-            counter.current_count() - 1
+            (counter.current_count() - 1, diff)
         })
         .collect()
     }
@@ -165,7 +165,9 @@ struct Crossing {
 /// The two possible orientations for a `Crossing`.
 #[derive(Copy, Clone, Debug)]
 enum Orientation {
+    // might rename to Positive
     Over,
+    // might rename to Negative
     Under,
 }
 
@@ -268,6 +270,10 @@ mod tests {
         assert_eq!(2 + 2, 4);
     }
 
+    fn unknots(v: Vec<(usize, i16)>) -> Vec<usize> {
+        v.iter().map(|r| r.0).collect()
+    }
+
     mod region_counter {
         use crate::RegionCounter;
 
@@ -314,6 +320,7 @@ mod tests {
     mod knot_parsing {
         #![allow(non_snake_case)]
 
+        use super::unknots;
         use crate::Knot;
         use std::str::FromStr;
 
@@ -354,6 +361,7 @@ mod tests {
     }
 
     mod resolving {
+        use super::unknots;
         use crate::Knot;
         use std::str::FromStr;
 
@@ -361,13 +369,13 @@ mod tests {
         fn basics() {
             let knot = Knot::from_str("abc").unwrap();
 
-            let mut resolutions = knot.resolutions();
+            let mut resolutions = unknots(knot.resolutions());
             println!("{:?}", resolutions);
             resolutions.sort();
             assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
 
             let knot = Knot::from_str("acb").unwrap();
-            let mut resolutions = knot.resolutions();
+            let mut resolutions = unknots(knot.resolutions());
             println!("{:?}", resolutions);
             resolutions.sort();
             assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
@@ -376,17 +384,17 @@ mod tests {
         #[test]
         fn missing_columns() {
             let knot = Knot::from_str("b").unwrap();
-            let mut resolutions = knot.resolutions();
+            let mut resolutions = unknots(knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![2, 3]);
 
             let knot = Knot::from_str("bc").unwrap();
-            let mut resolutions = knot.resolutions();
+            let mut resolutions = unknots(knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![2, 3, 3, 4]);
 
             let knot = Knot::from_str("bd").unwrap();
-            let mut resolutions = knot.resolutions();
+            let mut resolutions = unknots(knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![3, 4, 4, 5]);
         }
