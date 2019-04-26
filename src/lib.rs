@@ -33,14 +33,14 @@ impl Knot {
                     if bit {
                         diff += 1; // TODO: might need to switch
                         match crossing.orientation {
-                            Orientation::Over => counter.combine(crossing.left, crossing.right),
-                            Orientation::Under => counter.combine(crossing.top, crossing.bottom),
+                            Orientation::Positive => counter.combine(crossing.left, crossing.right),
+                            Orientation::Negative => counter.combine(crossing.top, crossing.bottom),
                         }
                     } else {
                         diff -= 1; // TODO: might need to switch
                         match crossing.orientation {
-                            Orientation::Over => counter.combine(crossing.top, crossing.bottom),
-                            Orientation::Under => counter.combine(crossing.left, crossing.right),
+                            Orientation::Positive => counter.combine(crossing.top, crossing.bottom),
+                            Orientation::Negative => counter.combine(crossing.left, crossing.right),
                         }
                     }
                 });
@@ -130,9 +130,9 @@ impl FromStr for Knot {
                 .chars()
                 .map(|c| {
                     let orientation = if c.is_ascii_lowercase() {
-                        Orientation::Over
+                        Orientation::Positive
                     } else {
-                        Orientation::Under
+                        Orientation::Negative
                     };
                     let c = c.to_ascii_lowercase() as u8;
                     let column = c - 97; // 97 -> 'a' on the ascii table
@@ -165,10 +165,8 @@ struct Crossing {
 /// The two possible orientations for a `Crossing`.
 #[derive(Copy, Clone, Debug)]
 enum Orientation {
-    // might rename to Positive
-    Over,
-    // might rename to Negative
-    Under,
+    Positive,
+    Negative,
 }
 
 /// A struct used to represent a `Crossing` still in the process of being parsed.
