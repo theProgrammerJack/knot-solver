@@ -45,7 +45,7 @@ impl Mul for Term {
 fn binomial_coefficient(n: isize, mut k: isize) -> isize {
     let mut res = 1;
 
-    if (k > n - k) {
+    if k > n - k {
         k = n - k;
     }
 
