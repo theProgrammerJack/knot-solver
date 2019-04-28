@@ -14,3 +14,7 @@ rand = "0.6.5"
 [[bench]]
 name = "region_counter"
 harness = false
+
+[[bench]]
+name = "resolving"
+harness = false

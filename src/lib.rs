@@ -1,6 +1,8 @@
 use bitvec::{BitVec, LittleEndian};
 use std::{collections::HashSet, str::FromStr};
 
+mod polynomial;
+
 /// Represents a knot.
 pub struct Knot {
     crossings: Vec<Crossing>,
@@ -20,7 +22,7 @@ impl Knot {
 
     /// Iterates over all possible resolutions of the knot, returning a `Vec<(usize, i16)>` containing the
     /// number of unknots in each and the difference between the number of 0 and infinity resolutions taken.
-    fn resolutions(&self) -> Vec<(usize, i16)> {
+    pub fn resolutions(&self) -> Vec<(usize, i16)> {
         let r = 0u128..(2u128.pow(self.num_crossings() as u32));
         r.map(|n| {
             let mut diff: i16 = 0;
@@ -368,15 +370,23 @@ mod tests {
             let knot = Knot::from_str("abc").unwrap();
 
             let mut resolutions = unknots(knot.resolutions());
-            println!("{:?}", resolutions);
+            println!("{:?}", knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
 
             let knot = Knot::from_str("acb").unwrap();
             let mut resolutions = unknots(knot.resolutions());
-            println!("{:?}", resolutions);
+            println!("{:?}", knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
+
+            let mut s = String::new();
+            for _ in 0..10 {
+                s.push('a');
+            }
+            let knot = Knot::from_str(&s).unwrap();
+            let mut resolutions = unknots(knot.resolutions());
+            println!("{:?}", knot.resolutions());
         }
 
         #[test]
