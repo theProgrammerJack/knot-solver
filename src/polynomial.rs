@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::ops::{Add, Div, Mul, AddAssign};
+use std::ops::{Add, AddAssign, Div, Mul};
 
 pub struct Polynomial(Vec<Term>);
 
@@ -134,12 +134,12 @@ impl Add for Term {
 
     fn add(self, rhs: Self) -> Self::Output {
         if self.exponent == rhs.exponent {
-            Polynomial(vec![Term {
+            Polynomial::from_vec(vec![Term {
                 coefficient: self.coefficient + rhs.coefficient,
                 exponent: self.exponent,
             }])
         } else {
-            Polynomial(vec![self, rhs])
+            Polynomial::from_vec(vec![self, rhs])
         }
     }
 }
