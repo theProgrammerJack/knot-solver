@@ -1,6 +1,68 @@
-use std::ops::{Div, Mul};
+use std::cmp::Ordering;
+use std::ops::{Add, Div, Mul, AddAssign};
 
 pub struct Polynomial(Vec<Term>);
+
+impl Polynomial {
+    fn from_vec(mut terms: Vec<Term>) -> Self {
+        terms.sort_unstable_by(compare_term_exponent);
+        Polynomial(terms)
+    }
+
+    fn iter(&self) -> impl Iterator + '_ {
+        self.0.iter()
+    }
+}
+
+impl IntoIterator for Polynomial {
+    type Item = Term;
+    type IntoIter = <Vec<Term> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl Add<Term> for Polynomial {
+    type Output = Polynomial;
+
+    fn add(self, rhs: Term) -> Self::Output {
+        let mut p = self;
+        p += rhs;
+        p
+    }
+}
+
+impl AddAssign<Term> for Polynomial {
+    fn add_assign(&mut self, rhs: Term) {
+        match self.0.binary_search_by(|t| compare_term_exponent(t, &rhs)) {
+            Ok(i) => {
+                let old = self.0.remove(i);
+                self.0.insert(
+                    i,
+                    Term {
+                        // Need to manually construct term since adding terms returns a polynomial.
+                        coefficient: old.coefficient + rhs.coefficient,
+                        exponent: old.exponent,
+                    },
+                )
+            }
+            Err(i) => self.0.insert(i, rhs),
+        }
+    }
+}
+
+impl Add for Polynomial {
+    type Output = Polynomial;
+
+    fn add(self, rhs: Polynomial) -> Self::Output {
+        let mut p = self;
+        for term in rhs {
+            p += term;
+        }
+        p
+    }
+}
 
 pub struct Binomial(Term, Term);
 
@@ -10,9 +72,14 @@ impl Binomial {
     }
 }
 
-struct Term {
+#[derive(Eq)]
+pub struct Term {
     coefficient: isize,
     exponent: isize,
+}
+
+fn compare_term_exponent(t1: &Term, t2: &Term) -> Ordering {
+    t1.exponent.cmp(&t2.exponent)
 }
 
 impl Term {
@@ -31,13 +98,48 @@ impl Term {
     }
 }
 
+impl Ord for Term {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.exponent
+            .cmp(&other.exponent)
+            .then_with(|| self.coefficient.cmp(&other.coefficient))
+    }
+}
+
+impl PartialOrd for Term {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Term {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == Ordering::Equal
+    }
+}
+
 impl Mul for Term {
     type Output = Term;
 
-    fn mul(self, rhs: Self) -> Self {
+    fn mul(self, rhs: Self) -> Self::Output {
         Term {
             coefficient: self.coefficient * rhs.coefficient,
             exponent: self.exponent + rhs.exponent,
+        }
+    }
+}
+
+impl Add for Term {
+    type Output = Polynomial;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        if self.exponent == rhs.exponent {
+            Polynomial(vec![Term {
+                coefficient: self.coefficient + rhs.coefficient,
+                exponent: self.exponent,
+            }])
+        } else {
+            Polynomial(vec![self, rhs])
         }
     }
 }
