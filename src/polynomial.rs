@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::ops::{Add, AddAssign, Div, Mul};
+use std::fmt;
 
 pub struct Polynomial(Vec<Term>);
 
@@ -96,6 +97,14 @@ impl Term {
             exponent: self.exponent + exponent,
         }
     }
+
+    fn is_zero(&self) -> bool {
+        self.coefficient == 0
+    }
+
+    fn is_one(&self) -> bool {
+        !self.is_zero() && self.exponent == 0
+    }
 }
 
 impl Ord for Term {
@@ -141,6 +150,12 @@ impl Add for Term {
         } else {
             Polynomial::from_vec(vec![self, rhs])
         }
+    }
+}
+
+impl fmt::Display for Term {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "{}A^{}", self.coefficient, self.exponent)
     }
 }
 
