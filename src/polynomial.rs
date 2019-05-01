@@ -1,7 +1,8 @@
 use std::cmp::Ordering;
-use std::ops::{Add, AddAssign, Div, Mul};
 use std::fmt;
+use std::ops::{Add, AddAssign, Mul};
 
+#[derive(Eq, PartialEq)]
 pub struct Polynomial(Vec<Term>);
 
 impl Polynomial {
@@ -10,7 +11,7 @@ impl Polynomial {
         Polynomial(terms)
     }
 
-    fn iter(&self) -> impl Iterator + '_ {
+    fn iter(&self) -> impl Iterator<Item = &Term> + '_ {
         self.0.iter()
     }
 }
@@ -21,6 +22,17 @@ impl IntoIterator for Polynomial {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl fmt::Display for Polynomial {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let terms = self
+            .iter()
+            .map(|t| format!("{}", t))
+            .collect::<Vec<_>>()
+            .join(" + ");
+        write!(f, "{}", terms)
     }
 }
 
@@ -73,7 +85,7 @@ impl Binomial {
     }
 }
 
-#[derive(Eq)]
+#[derive(Eq, Debug, Clone)]
 pub struct Term {
     coefficient: isize,
     exponent: isize,
@@ -93,8 +105,8 @@ impl Term {
 
     fn pow(&self, exponent: isize) -> Self {
         Term {
-            coefficient: self.coefficient,
-            exponent: self.exponent + exponent,
+            coefficient: self.coefficient.pow(exponent as u32),
+            exponent: self.exponent * exponent,
         }
     }
 
@@ -134,6 +146,17 @@ impl Mul for Term {
         Term {
             coefficient: self.coefficient * rhs.coefficient,
             exponent: self.exponent + rhs.exponent,
+        }
+    }
+}
+
+impl Mul<isize> for Term {
+    type Output = Term;
+
+    fn mul(self, rhs: isize) -> Self::Output {
+        Term {
+            coefficient: self.coefficient * rhs,
+            exponent: self.exponent,
         }
     }
 }
@@ -231,6 +254,35 @@ mod test {
                 BinomialIter::new(5).collect::<Vec<isize>>(),
                 vec![1, 5, 10, 10, 5, 1]
             );
+        }
+    }
+
+    mod term {
+        use crate::polynomial::Term;
+
+        #[test]
+        fn display() {
+            let t1 = Term::new(3, 5);
+            assert_eq!("3A^5", format!("{}", t1));
+
+            let t1 = Term::new(7, 9);
+            assert_eq!("7A^9", format!("{}", t1));
+        }
+
+        #[test]
+        fn pow() {
+            assert_eq!(Term::new(4, 6), Term::new(2, 3).pow(2));
+            assert_eq!(Term::new(3, 2), Term::new(3, 2).pow(1));
+            assert_eq!(Term::new(1, 3), Term::new(1, 1).pow(3));
+            assert_eq!(Term::new(8, 9), Term::new(2, 3).pow(3));
+        }
+
+        #[test]
+        fn mul() {
+            assert_eq!(Term::new(3, 6) * Term::new(6, 3), Term::new(18, 9));
+            assert_eq!(Term::new(4, 7) * Term::new(1, 1), Term::new(4, 8));
+            assert_eq!(Term::new(2, 2) * Term::new(5, 5), Term::new(10, 7));
+            assert_eq!(Term::new(8, 23) * Term::new(20, 7), Term::new(160, 30));
         }
     }
 }
