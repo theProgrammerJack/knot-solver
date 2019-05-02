@@ -1,3 +1,4 @@
+use crate::polynomial::{Binomial, Polynomial, Term};
 use bitvec::{BitVec, LittleEndian};
 use std::{collections::HashSet, str::FromStr};
 
@@ -49,6 +50,16 @@ impl Knot {
             (counter.current_count() - 1, diff)
         })
         .collect()
+    }
+
+    pub fn bracket_polynomial(&self) -> Polynomial {
+        self.resolutions()
+            .iter()
+            .map(|(c, d)| {
+                Binomial(Term::new(-1, 2), Term::new(-1, -2)).expand(*c as isize - 1)
+                    * Term::new(1, *d as isize)
+            })
+            .sum()
     }
 
     fn from_crossing_builders(mut crossing_builders: Vec<CrossingBuilder>) -> Self {
@@ -370,13 +381,13 @@ mod tests {
             let knot = Knot::from_str("abc").unwrap();
 
             let mut resolutions = unknots(knot.resolutions());
-            println!("{:?}", knot.resolutions());
+            //            println!("{:?}", knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
 
             let knot = Knot::from_str("acb").unwrap();
             let mut resolutions = unknots(knot.resolutions());
-            println!("{:?}", knot.resolutions());
+            //            println!("{:?}", knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
 
@@ -385,8 +396,8 @@ mod tests {
                 s.push('a');
             }
             let knot = Knot::from_str(&s).unwrap();
-            let mut resolutions = unknots(knot.resolutions());
-            println!("{:?}", knot.resolutions());
+            let resolutions = unknots(knot.resolutions());
+            //            println!("{:?}", knot.resolutions());
         }
 
         #[test]
@@ -405,6 +416,17 @@ mod tests {
             let mut resolutions = unknots(knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![3, 4, 4, 5]);
+        }
+    }
+
+    mod polynomial_generation {
+        use crate::Knot;
+        use std::str::FromStr;
+
+        #[test]
+        fn basics() {
+            println!("a: {}", Knot::from_str("a").unwrap().bracket_polynomial());
+            println!("A: {}", Knot::from_str("A").unwrap().bracket_polynomial());
         }
     }
 }

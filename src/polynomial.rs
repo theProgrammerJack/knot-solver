@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt;
+use std::iter::Sum;
 use std::ops::{Add, AddAssign, Mul};
 
 #[derive(Eq, PartialEq, Debug)]
@@ -7,15 +8,16 @@ pub struct Polynomial(Vec<Term>);
 
 impl Polynomial {
     fn from_vec(mut terms: Vec<Term>) -> Self {
+        terms.retain(|t| !t.is_zero());
         terms.sort_unstable_by(Term::compare_exponent);
         Polynomial(terms)
     }
 
     fn empty() -> Self {
-        Polynomial::from(Term::zero())
+        Polynomial::from_vec(Vec::new())
     }
 
-    fn iter(&self) -> impl DoubleEndedIterator<Item = &Term> + '_ {
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = &Term> + '_ {
         self.0.iter()
     }
 }
@@ -53,20 +55,32 @@ impl Add<Term> for Polynomial {
 
 impl AddAssign<Term> for Polynomial {
     fn add_assign(&mut self, rhs: Term) {
-        match self.0.binary_search_by(|t| t.compare_exponent(&rhs)) {
-            Ok(i) => {
-                let old = self.0.remove(i);
-                self.0.insert(
-                    i,
-                    Term {
-                        // Need to manually construct term since adding terms returns a polynomial.
-                        coefficient: old.coefficient + rhs.coefficient,
-                        exponent: old.exponent,
-                    },
-                )
+        if !rhs.is_zero() {
+            match self.0.binary_search_by(|t| t.compare_exponent(&rhs)) {
+                Ok(i) => {
+                    let old = self.0.remove(i);
+                    self.0.insert(
+                        i,
+                        Term {
+                            // Need to manually construct term since adding terms returns a polynomial.
+                            coefficient: old.coefficient + rhs.coefficient,
+                            exponent: old.exponent,
+                        },
+                    )
+                }
+                Err(i) => self.0.insert(i, rhs),
             }
-            Err(i) => self.0.insert(i, rhs),
         }
+    }
+}
+
+impl Sum for Polynomial {
+    fn sum<I: Iterator<Item = Polynomial>>(iter: I) -> Self {
+        let mut p = Polynomial::empty();
+        for polynomial in iter {
+            p += polynomial;
+        }
+        p
     }
 }
 
@@ -82,6 +96,22 @@ impl Add for Polynomial {
     }
 }
 
+impl AddAssign for Polynomial {
+    fn add_assign(&mut self, rhs: Polynomial) {
+        for term in rhs {
+            *self += term;
+        }
+    }
+}
+
+impl Mul<Term> for Polynomial {
+    type Output = Polynomial;
+
+    fn mul(self, rhs: Term) -> Self::Output {
+        Polynomial::from_vec(self.into_iter().map(|t| t * rhs).collect())
+    }
+}
+
 impl From<Term> for Polynomial {
     fn from(term: Term) -> Self {
         Polynomial::from_vec(vec![term])
@@ -91,7 +121,7 @@ impl From<Term> for Polynomial {
 pub struct Binomial(pub Term, pub Term);
 
 impl Binomial {
-    fn expand(self, exp: isize) -> Polynomial {
+    pub fn expand(self, exp: isize) -> Polynomial {
         Polynomial::from_vec(
             BinomialIter::new(exp)
                 .map(|(c, k)| self.0.pow(k) * self.1.pow(exp - k) * c)
@@ -107,37 +137,37 @@ pub struct Term {
 }
 
 impl Term {
-    fn new(coefficient: isize, exponent: isize) -> Self {
+    pub fn new(coefficient: isize, exponent: isize) -> Self {
         Term {
             coefficient,
             exponent,
         }
     }
 
-    fn pow(&self, exponent: isize) -> Self {
+    pub fn pow(&self, exponent: isize) -> Self {
         Term {
             coefficient: self.coefficient.pow(exponent as u32),
             exponent: self.exponent * exponent,
         }
     }
 
-    fn is_zero(&self) -> bool {
+    pub fn is_zero(&self) -> bool {
         self.coefficient == 0
     }
 
-    fn zero() -> Self {
+    pub fn zero() -> Self {
         Term::new(0, 0)
     }
 
-    fn is_one(&self) -> bool {
+    pub fn is_one(&self) -> bool {
         self.exponent == 0 && self.coefficient == 1
     }
 
-    fn one() -> Self {
+    pub fn one() -> Self {
         Term::new(1, 0)
     }
 
-    fn compare_exponent(&self, other: &Term) -> Ordering {
+    pub fn compare_exponent(&self, other: &Term) -> Ordering {
         self.exponent.cmp(&other.exponent)
     }
 }
@@ -346,6 +376,12 @@ mod tests {
                 Term::new(3, 4) + Term::new(4, 4),
                 Polynomial::from_vec(vec![Term::new(7, 4)])
             );
+        }
+
+        #[test]
+        fn is_zero() {
+            assert!(Term::new(0, 1).is_zero());
+            assert!(Term::new(0, -1).is_zero());
         }
     }
 
