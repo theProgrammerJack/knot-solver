@@ -20,6 +20,10 @@ impl Polynomial {
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &Term> + '_ {
         self.0.iter()
     }
+
+    pub fn remove_zero_terms(&mut self) {
+        self.0.retain(|t| !t.is_zero());
+    }
 }
 
 impl IntoIterator for Polynomial {
