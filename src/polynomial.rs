@@ -2,16 +2,20 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::ops::{Add, AddAssign, Mul};
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Debug)]
 pub struct Polynomial(Vec<Term>);
 
 impl Polynomial {
     fn from_vec(mut terms: Vec<Term>) -> Self {
-        terms.sort_unstable_by(compare_term_exponent);
+        terms.sort_unstable_by(Term::compare_exponent);
         Polynomial(terms)
     }
 
-    fn iter(&self) -> impl Iterator<Item = &Term> + '_ {
+    fn empty() -> Self {
+        Polynomial::from(Term::zero())
+    }
+
+    fn iter(&self) -> impl DoubleEndedIterator<Item = &Term> + '_ {
         self.0.iter()
     }
 }
@@ -29,6 +33,7 @@ impl fmt::Display for Polynomial {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let terms = self
             .iter()
+            .rev()
             .map(|t| format!("{}", t))
             .collect::<Vec<_>>()
             .join(" + ");
@@ -48,7 +53,7 @@ impl Add<Term> for Polynomial {
 
 impl AddAssign<Term> for Polynomial {
     fn add_assign(&mut self, rhs: Term) {
-        match self.0.binary_search_by(|t| compare_term_exponent(t, &rhs)) {
+        match self.0.binary_search_by(|t| t.compare_exponent(&rhs)) {
             Ok(i) => {
                 let old = self.0.remove(i);
                 self.0.insert(
@@ -77,22 +82,28 @@ impl Add for Polynomial {
     }
 }
 
-pub struct Binomial(Term, Term);
-
-impl Binomial {
-    fn expand(exp: i16) -> Polynomial {
-        unimplemented!()
+impl From<Term> for Polynomial {
+    fn from(term: Term) -> Self {
+        Polynomial::from_vec(vec![term])
     }
 }
 
-#[derive(Eq, Debug, Clone)]
+pub struct Binomial(pub Term, pub Term);
+
+impl Binomial {
+    fn expand(self, exp: isize) -> Polynomial {
+        Polynomial::from_vec(
+            BinomialIter::new(exp)
+                .map(|(c, k)| self.0.pow(k) * self.1.pow(exp - k) * c)
+                .collect(),
+        )
+    }
+}
+
+#[derive(Eq, Debug, Clone, Copy)]
 pub struct Term {
     coefficient: isize,
     exponent: isize,
-}
-
-fn compare_term_exponent(t1: &Term, t2: &Term) -> Ordering {
-    t1.exponent.cmp(&t2.exponent)
 }
 
 impl Term {
@@ -114,8 +125,20 @@ impl Term {
         self.coefficient == 0
     }
 
+    fn zero() -> Self {
+        Term::new(0, 0)
+    }
+
     fn is_one(&self) -> bool {
-        !self.is_zero() && self.exponent == 0
+        self.exponent == 0 && self.coefficient == 1
+    }
+
+    fn one() -> Self {
+        Term::new(1, 0)
+    }
+
+    fn compare_exponent(&self, other: &Term) -> Ordering {
+        self.exponent.cmp(&other.exponent)
     }
 }
 
@@ -209,13 +232,13 @@ impl BinomialIter {
 }
 
 impl Iterator for BinomialIter {
-    type Item = isize;
+    type Item = (isize, isize);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.k <= self.n {
             let res = binomial_coefficient(self.n, self.k);
             self.k += 1;
-            Some(res)
+            Some((res, self.k - 1))
         } else {
             None
         }
@@ -223,9 +246,9 @@ impl Iterator for BinomialIter {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     mod binomial {
-        use crate::polynomial::{binomial_coefficient, BinomialIter};
+        use crate::polynomial::{binomial_coefficient, Binomial, BinomialIter, Polynomial, Term};
 
         #[test]
         fn basics() {
@@ -239,26 +262,53 @@ mod test {
 
         #[test]
         fn iter() {
-            assert_eq!(BinomialIter::new(0).collect::<Vec<isize>>(), vec![1]);
-            assert_eq!(BinomialIter::new(1).collect::<Vec<isize>>(), vec![1, 1]);
-            assert_eq!(BinomialIter::new(2).collect::<Vec<isize>>(), vec![1, 2, 1]);
             assert_eq!(
-                BinomialIter::new(3).collect::<Vec<isize>>(),
+                BinomialIter::new(0).map(|t| t.0).collect::<Vec<isize>>(),
+                vec![1]
+            );
+            assert_eq!(
+                BinomialIter::new(1).map(|t| t.0).collect::<Vec<isize>>(),
+                vec![1, 1]
+            );
+            assert_eq!(
+                BinomialIter::new(2).map(|t| t.0).collect::<Vec<isize>>(),
+                vec![1, 2, 1]
+            );
+            assert_eq!(
+                BinomialIter::new(3).map(|t| t.0).collect::<Vec<isize>>(),
                 vec![1, 3, 3, 1]
             );
             assert_eq!(
-                BinomialIter::new(4).collect::<Vec<isize>>(),
+                BinomialIter::new(4).map(|t| t.0).collect::<Vec<isize>>(),
                 vec![1, 4, 6, 4, 1]
             );
             assert_eq!(
-                BinomialIter::new(5).collect::<Vec<isize>>(),
+                BinomialIter::new(5).map(|t| t.0).collect::<Vec<isize>>(),
                 vec![1, 5, 10, 10, 5, 1]
+            );
+        }
+
+        #[test]
+        fn expand() {
+            assert_eq!(
+                Polynomial::from_vec(vec![Term::new(1, 4), Term::new(2, 3), Term::new(1, 2)]),
+                Binomial(Term::new(1, 1), Term::new(1, 2)).expand(2)
+            );
+
+            assert_eq!(
+                Polynomial::from_vec(vec![
+                    Term::new(8, 3),
+                    Term::new(36, 6),
+                    Term::new(54, 9),
+                    Term::new(27, 12)
+                ]),
+                Binomial(Term::new(2, 1), Term::new(3, 4)).expand(3)
             );
         }
     }
 
     mod term {
-        use crate::polynomial::Term;
+        use crate::polynomial::{Polynomial, Term};
 
         #[test]
         fn display() {
@@ -283,6 +333,87 @@ mod test {
             assert_eq!(Term::new(4, 7) * Term::new(1, 1), Term::new(4, 8));
             assert_eq!(Term::new(2, 2) * Term::new(5, 5), Term::new(10, 7));
             assert_eq!(Term::new(8, 23) * Term::new(20, 7), Term::new(160, 30));
+        }
+
+        #[test]
+        fn add() {
+            assert_eq!(
+                Term::new(3, 4) + Term::new(4, 5),
+                Polynomial::from_vec(vec![Term::new(3, 4), Term::new(4, 5)])
+            );
+
+            assert_eq!(
+                Term::new(3, 4) + Term::new(4, 4),
+                Polynomial::from_vec(vec![Term::new(7, 4)])
+            );
+        }
+    }
+
+    mod polynomial {
+        use crate::polynomial::{Polynomial, Term};
+
+        #[test]
+        fn display() {
+            assert_eq!(
+                "3A^4",
+                format!("{}", Polynomial::from_vec(vec![Term::new(3, 4)]))
+            );
+            assert_eq!(
+                "3A^4 + 4A^3",
+                format!(
+                    "{}",
+                    Polynomial::from_vec(vec![Term::new(3, 4), Term::new(4, 3)])
+                )
+            );
+            assert_eq!(
+                "3A^4 + 4A^3",
+                format!(
+                    "{}",
+                    Polynomial::from_vec(vec![Term::new(4, 3), Term::new(3, 4)])
+                )
+            );
+
+            assert_eq!(
+                "3A^4 + 4A^3",
+                format!(
+                    "{}",
+                    Polynomial::from(Term::new(3, 4)) + Polynomial::from(Term::new(4, 3))
+                )
+            );
+        }
+
+        #[test]
+        fn add_term() {
+            assert_eq!(
+                Polynomial::from(Term::new(3, 4)) + Polynomial::from(Term::new(4, 3)),
+                Polynomial::from_vec(vec![Term::new(3, 4), Term::new(4, 3)])
+            );
+
+            assert_eq!(
+                Polynomial::from_vec(vec![Term::new(3, 4), Term::new(4, 3)])
+                    + Polynomial::from(Term::new(4, 3)),
+                Polynomial::from_vec(vec![Term::new(3, 4), Term::new(8, 3)])
+            );
+        }
+
+        #[test]
+        fn add_polynomial() {
+            assert_eq!(
+                Polynomial::from_vec(vec![Term::new(3, 4), Term::new(4, 3)])
+                    + Polynomial::from_vec(vec![Term::new(3, 4), Term::new(4, 3)]),
+                Polynomial::from_vec(vec![Term::new(6, 4), Term::new(8, 3)])
+            );
+
+            assert_eq!(
+                Polynomial::from_vec(vec![Term::new(3, 4), Term::new(4, 3)])
+                    + Polynomial::from_vec(vec![Term::new(3, 7), Term::new(4, 22)]),
+                Polynomial::from_vec(vec![
+                    Term::new(3, 4),
+                    Term::new(4, 3),
+                    Term::new(3, 7),
+                    Term::new(4, 22)
+                ])
+            );
         }
     }
 }
