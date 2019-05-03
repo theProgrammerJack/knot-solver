@@ -247,8 +247,8 @@ fn binomial_coefficient(n: isize, mut k: isize) -> isize {
     }
 
     for i in 0..k {
-        res *= (n - i);
-        res /= (i + 1);
+        res *= n - i;
+        res /= i + 1;
     }
 
     res

@@ -331,7 +331,6 @@ mod tests {
     mod knot_parsing {
         #![allow(non_snake_case)]
 
-        use super::unknots;
         use crate::Knot;
         use std::str::FromStr;
 
@@ -390,14 +389,6 @@ mod tests {
             //            println!("{:?}", knot.resolutions());
             resolutions.sort();
             assert_eq!(resolutions, vec![1, 2, 2, 2, 3, 3, 3, 4]);
-
-            let mut s = String::new();
-            for _ in 0..10 {
-                s.push('a');
-            }
-            let knot = Knot::from_str(&s).unwrap();
-            let resolutions = unknots(knot.resolutions());
-            //            println!("{:?}", knot.resolutions());
         }
 
         #[test]
