@@ -1,20 +1,6 @@
-[package]
-name = "knot-solver"
-version = "0.1.0"
-authors = ["Jack Greenberg <theProgrammerJack@gmail.com>"]
-edition = "2018"
+[workspace]
 
-[dependencies]
-bitvec = "0.10.1"
-
-[dev-dependencies]
-criterion = "0.2"
-rand = "0.6.5"
-
-[[bench]]
-name = "region_counter"
-harness = false
-
-[[bench]]
-name = "resolving"
-harness = false
+members = [
+	"knot-solver",
+	"knot-solver-cli"
+]
