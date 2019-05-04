@@ -63,14 +63,16 @@ impl AddAssign<Term> for Polynomial {
             match self.0.binary_search_by(|t| t.compare_exponent(&rhs)) {
                 Ok(i) => {
                     let old = self.0.remove(i);
-                    self.0.insert(
-                        i,
-                        Term {
-                            // Need to manually construct term since adding terms returns a polynomial.
-                            coefficient: old.coefficient + rhs.coefficient,
-                            exponent: old.exponent,
-                        },
-                    )
+                    if old.coefficient + rhs.coefficient != 0 {
+                        self.0.insert(
+                            i,
+                            Term {
+                                // Need to manually construct term since adding terms returns a polynomial.
+                                coefficient: old.coefficient + rhs.coefficient,
+                                exponent: old.exponent,
+                            },
+                        );
+                    }
                 }
                 Err(i) => self.0.insert(i, rhs),
             }
