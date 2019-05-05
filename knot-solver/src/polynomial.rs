@@ -3,11 +3,7 @@ use std::fmt;
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Mul};
 
-use num::{
-    rational::Rational,
-    Zero,
-    One
-};
+use num::{rational::Rational, One, Zero};
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct Polynomial(Vec<Term>);
@@ -152,7 +148,7 @@ impl Term {
     pub fn new<T: Into<Rational>>(coefficient: T, exponent: T) -> Self {
         Term {
             coefficient: coefficient.into(),
-            exponent:exponent.into(),
+            exponent: exponent.into(),
         }
     }
 
