@@ -22,7 +22,10 @@ for c in setk:
 	knotfield.append([None]*50)
 	knotfield[m][0]= ord(c)
 	m+=1
-
+	
+def bitfield(n):
+    return [int(digit) for digit in bin(n)[2:]] 
+	
 def column(letter):
 	for i in range(0, len(knotfield)):
 		if (ord(letter.lower())) == knotfield[i][0]:
@@ -68,7 +71,7 @@ GREEN = (  0, 255,   0)
 RED =   (255,   0,   0)
  
 # Set the height and width of the screen
-size = [500, 500]
+size = [800, 800]
 screen = pygame.display.set_mode(size)
  
 pygame.display.set_caption(knot)
@@ -77,10 +80,14 @@ pygame.display.set_caption(knot)
 done = False
 clock = pygame.time.Clock()
  
-spacingx = size[0] / (len(knotfield)+2)
+animate = True 
+combination = 0
+wombocombo = [0]*len(knot)  
+
+spacingx = size[0] / (len(knotfield)+2) * 3 / 4
 spacingy = size[1] / len(knotfield[0])
 while not done:
-	clock.tick(10)
+	clock.tick(2)
 	for event in pygame.event.get(): 
 		if event.type == pygame.QUIT:
 			done=True 
@@ -88,9 +95,9 @@ while not done:
   
 	# Clear the screen and set the screen background
 	screen.fill(WHITE)
-
+	place = 0
 	for i in range(0, len(knotfield)):
-		for j in range(1, len(knotfield[0])):
+		for j in range(1, len(knotfield[0])-1):
 			if knotfield[i][j] == None or knotfield[i][j] == 1:
 			
 				if i == len(knotfield)-1 or knotfield[i+1][j] == None or knotfield[i+1][j] == 1:
@@ -99,15 +106,32 @@ while not done:
 				if i == 0 or knotfield[i-1][j] == None or knotfield[i-1][j] == 1:
 					pygame.draw.line(screen, (0, 0, 0), [spacingx*(i+1), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)
 			else:
-				if knotfield[i][j].isupper():
-					pygame.draw.line(screen, (0,0,0), [spacingx*(i+2), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)
-					pygame.draw.line(screen, (255,0,0), [spacingx*(i+1), spacingy*j], [spacingx*(i+2), spacingy*(j+1)], 3) 
-				if knotfield[i][j].islower():
-					pygame.draw.line(screen, (0,0,0), [spacingx*(i+1), spacingy*j], [spacingx*(i+2), spacingy*(j+1)], 3)
-					pygame.draw.line(screen, (255,0,0), [spacingx*(i+2), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)					
+				if not animate:
+					if knotfield[i][j].isupper():
+						pygame.draw.line(screen, (0,0,0), [spacingx*(i+2), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)
+						pygame.draw.line(screen, (255,0,0), [spacingx*(i+1), spacingy*j], [spacingx*(i+2), spacingy*(j+1)], 3) 
+					if knotfield[i][j].islower():
+						pygame.draw.line(screen, (0,0,0), [spacingx*(i+1), spacingy*j], [spacingx*(i+2), spacingy*(j+1)], 3)
+						pygame.draw.line(screen, (255,0,0), [spacingx*(i+2), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)					
+				else: 
+					if wombocombo[place] == 0:
+						pygame.draw.arc(screen, RED, [spacingx*(i+1)-spacingx/6, spacingy*j, spacingx/3, spacingy], 3*pi/2, pi/2)
+						pygame.draw.arc(screen, RED, [spacingx*(i+2)-spacingx/6, spacingy*j, spacingx/3, spacingy], pi/2, 3*pi/2)
+					if wombocombo[place] == 1:
+						pygame.draw.arc(screen, RED, [spacingx*(i+1), spacingy*j-spacingy/6, spacingx, spacingy/3], pi, 2*pi)
+						pygame.draw.arc(screen, RED, [spacingx*(i+1), spacingy*(j+1)-spacingy/6, spacingx, spacingy/3], 0, pi)
 					
-				
-
+					place += 1
+					
+	if animate:
+		combination+=1
+		if combination >= 2 ** len(knot):
+			combination = 0
+			animate = False
+	grapes = bitfield(combination)
+	for i in range(0, len(grapes)):
+		wombocombo[len(wombocombo)-1-i] = grapes[len(grapes)-1-i]
+	
 	pygame.display.flip()
  
 
