@@ -5,6 +5,13 @@ use std::ops::{Add, AddAssign, Mul};
 
 use num::{rational::Rational, One, Zero};
 
+#[macro_export]
+macro_rules! term {
+    ($c:literal ^ $e:literal) => {
+        $crate::polynomial::Term::new($c, $e)
+    }
+}
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct Polynomial(Vec<Term>);
 
@@ -390,6 +397,14 @@ mod tests {
         fn is_zero() {
             assert!(Term::new(0, 1).is_zero());
             assert!(Term::new(0, -1).is_zero());
+        }
+
+        #[test]
+        fn macro_create() {
+            assert_eq!(Term::new(3, 3), term!(3^3));
+            assert_eq!(Term::new(-1, -3), term!(-1^-3));
+            assert_eq!(Term::new(3, 13), term!(3^13));
+            assert_eq!(Term::new(-30, 56), term!(-30^56));
         }
     }
 
