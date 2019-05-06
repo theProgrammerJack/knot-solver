@@ -1,25 +1,26 @@
-use structopt::StructOpt;
 use knot_solver::Knot;
 use std::str::FromStr;
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 struct Opt {
     #[structopt(subcommand)]
-    command: Command
+    command: Command,
 }
 
 #[derive(StructOpt, Debug)]
 enum Command {
     #[structopt(name = "bracket")]
-    Bracket {
-        braid: String,
-    }
+    Bracket { braid: String },
 }
 
 fn main() {
     let opt = Opt::from_args();
 
     match opt.command {
-        Command::Bracket { braid } => println!("{}", Knot::from_str(braid.as_str()).unwrap().bracket_polynomial()),
+        Command::Bracket { braid } => println!(
+            "{}",
+            Knot::from_str(braid.as_str()).unwrap().bracket_polynomial()
+        ),
     }
 }

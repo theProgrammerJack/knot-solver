@@ -418,7 +418,10 @@ mod tests {
         fn basics() {
             println!("a: {}", Knot::from_str("a").unwrap().bracket_polynomial());
             println!("A: {}", Knot::from_str("A").unwrap().bracket_polynomial());
-            println!("trefoil: {}", Knot::from_str("aaa").unwrap().bracket_polynomial());
+            println!(
+                "trefoil: {}",
+                Knot::from_str("aaa").unwrap().bracket_polynomial()
+            );
         }
     }
 }

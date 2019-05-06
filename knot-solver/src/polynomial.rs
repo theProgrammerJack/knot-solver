@@ -3,6 +3,8 @@ use std::fmt;
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Mul};
 
+use num::{rational::Rational, One, Zero};
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct Polynomial(Vec<Term>);
 
@@ -63,7 +65,7 @@ impl AddAssign<Term> for Polynomial {
             match self.0.binary_search_by(|t| t.compare_exponent(&rhs)) {
                 Ok(i) => {
                     let old = self.0.remove(i);
-                    if old.coefficient + rhs.coefficient != 0 {
+                    if !(old.coefficient + rhs.coefficient).is_zero() {
                         self.0.insert(
                             i,
                             Term {
@@ -138,27 +140,27 @@ impl Binomial {
 
 #[derive(Eq, Debug, Clone, Copy)]
 pub struct Term {
-    coefficient: isize,
-    exponent: isize,
+    coefficient: Rational,
+    exponent: Rational,
 }
 
 impl Term {
-    pub fn new(coefficient: isize, exponent: isize) -> Self {
+    pub fn new<T: Into<Rational>>(coefficient: T, exponent: T) -> Self {
         Term {
-            coefficient,
-            exponent,
+            coefficient: coefficient.into(),
+            exponent: exponent.into(),
         }
     }
 
     pub fn pow(&self, exponent: isize) -> Self {
         Term {
-            coefficient: self.coefficient.pow(exponent as u32),
+            coefficient: self.coefficient.pow(exponent as i32),
             exponent: self.exponent * exponent,
         }
     }
 
     pub fn is_zero(&self) -> bool {
-        self.coefficient == 0
+        self.coefficient.is_zero()
     }
 
     pub fn zero() -> Self {
@@ -166,7 +168,7 @@ impl Term {
     }
 
     pub fn is_one(&self) -> bool {
-        self.exponent == 0 && self.coefficient == 1
+        self.exponent.is_zero() && self.coefficient.is_one()
     }
 
     pub fn one() -> Self {
