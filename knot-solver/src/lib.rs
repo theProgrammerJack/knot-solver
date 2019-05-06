@@ -71,6 +71,14 @@ impl Knot {
             })
             .sum()
     }
+    
+    pub fn beta_polynomial(&self) -> Polynomial {
+        use num::pow::Pow;
+        let w = self.writhe();
+        println!("writhe: {}", w);
+        println!("{}", (-1f64).pow(w as i32).signum());
+        self.bracket_polynomial() * Term::new((-1f64).pow(w as i32).signum() as isize, 3 * self.writhe())
+    }
 
     fn from_crossing_builders(mut crossing_builders: Vec<CrossingBuilder>) -> Self {
         let max_column = crossing_builders

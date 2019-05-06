@@ -7,10 +7,26 @@ use num::{rational::Rational, One, Zero};
 
 #[macro_export]
 macro_rules! term {
-    ($c:literal ^ $e:literal) => {
+    ($c:literal A^ $e:literal) => {
+        $crate::polynomial::Term::new($c, $e)
+    };
+    ($cn:literal / $cd:literal A^ $ec:literal / $ed:literal) => {
+        $crate::polynomial::Term::new(
+            num::rational::Rational::new($cn, $cd),
+            num::rational::Rational::new($en, $ed),
+        )
+    };
+    ($c:tt A^ $e:tt) => {
         $crate::polynomial::Term::new($c, $e)
     };
 }
+
+// macro_rules! polynomial {
+//     ($c:literal ^ $e:literal $($tail:tt)*) => {
+//         $crate::polynomial::polynomial::from($crate::polynomial::Term::new($c, $e)) + polynomial!($($tail)*)
+//     };
+//     ($c:literal ^ )
+// }
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct Polynomial(Vec<Term>);
@@ -401,10 +417,10 @@ mod tests {
 
         #[test]
         fn macro_create() {
-            assert_eq!(Term::new(3, 3), term!(3 ^ 3));
-            assert_eq!(Term::new(-1, -3), term!(-1 ^ -3));
-            assert_eq!(Term::new(3, 13), term!(3 ^ 13));
-            assert_eq!(Term::new(-30, 56), term!(-30 ^ 56));
+            assert_eq!(Term::new(3, 3), term!(3 A^ 3));
+            assert_eq!(Term::new(-1, -3), term!(-1 A^ -3));
+            assert_eq!(Term::new(3, 13), term!(3 A^ 13));
+            assert_eq!(Term::new(-30, 56), term!(-30 A^ 56));
         }
     }
 
