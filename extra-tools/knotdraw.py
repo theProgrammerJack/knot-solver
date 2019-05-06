@@ -115,11 +115,11 @@ while not done:
 						pygame.draw.line(screen, (255,0,0), [spacingx*(i+2), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)					
 				else: 
 					if wombocombo[place] == 0:
-						pygame.draw.arc(screen, RED, [spacingx*(i+1)-spacingx/6, spacingy*j, spacingx/3, spacingy], 3*pi/2, pi/2)
-						pygame.draw.arc(screen, RED, [spacingx*(i+2)-spacingx/6, spacingy*j, spacingx/3, spacingy], pi/2, 3*pi/2)
+						pygame.draw.arc(screen, RED, [spacingx*(i+1)-spacingx/6, spacingy*j, spacingx/3, spacingy], 3*pi/2, pi/2, 2)
+						pygame.draw.arc(screen, RED, [spacingx*(i+2)-spacingx/6, spacingy*j, spacingx/3, spacingy], pi/2, 3*pi/2, 2)
 					if wombocombo[place] == 1:
-						pygame.draw.arc(screen, RED, [spacingx*(i+1), spacingy*j-spacingy/6, spacingx, spacingy/3], pi, 2*pi)
-						pygame.draw.arc(screen, RED, [spacingx*(i+1), spacingy*(j+1)-spacingy/6, spacingx, spacingy/3], 0, pi)
+						pygame.draw.arc(screen, RED, [spacingx*(i+1), spacingy*j-spacingy/6, spacingx, spacingy/3], pi, 2*pi,2)
+						pygame.draw.arc(screen, RED, [spacingx*(i+1), spacingy*(j+1)-spacingy/6, spacingx, spacingy/3], 0, pi,2)
 					
 					place += 1
 					
