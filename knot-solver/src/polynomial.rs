@@ -9,7 +9,7 @@ use num::{rational::Rational, One, Zero};
 macro_rules! term {
     ($c:literal ^ $e:literal) => {
         $crate::polynomial::Term::new($c, $e)
-    }
+    };
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -401,10 +401,10 @@ mod tests {
 
         #[test]
         fn macro_create() {
-            assert_eq!(Term::new(3, 3), term!(3^3));
-            assert_eq!(Term::new(-1, -3), term!(-1^-3));
-            assert_eq!(Term::new(3, 13), term!(3^13));
-            assert_eq!(Term::new(-30, 56), term!(-30^56));
+            assert_eq!(Term::new(3, 3), term!(3 ^ 3));
+            assert_eq!(Term::new(-1, -3), term!(-1 ^ -3));
+            assert_eq!(Term::new(3, 13), term!(3 ^ 13));
+            assert_eq!(Term::new(-30, 56), term!(-30 ^ 56));
         }
     }
 

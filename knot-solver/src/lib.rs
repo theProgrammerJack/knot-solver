@@ -53,10 +53,13 @@ impl Knot {
     }
 
     pub fn writhe(&self) -> isize {
-        self.crossings.iter().map(|c| match c.orientation {
-            Orientation::Positive => 1,
-            Orientation::Negative => -1,
-        }).sum()
+        self.crossings
+            .iter()
+            .map(|c| match c.orientation {
+                Orientation::Positive => 1,
+                Orientation::Negative => -1,
+            })
+            .sum()
     }
 
     pub fn bracket_polynomial(&self) -> Polynomial {
