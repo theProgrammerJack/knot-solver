@@ -71,13 +71,12 @@ impl Knot {
             })
             .sum()
     }
-    
+
     pub fn beta_polynomial(&self) -> Polynomial {
         use num::pow::Pow;
         let w = self.writhe();
-        println!("writhe: {}", w);
-        println!("{}", (-1f64).pow(w as i32).signum());
-        self.bracket_polynomial() * Term::new((-1f64).pow(w as i32).signum() as isize, 3 * self.writhe())
+        self.bracket_polynomial()
+            * Term::new((-1f64).pow(w as i32).signum() as isize, 3 * self.writhe())
     }
 
     fn from_crossing_builders(mut crossing_builders: Vec<CrossingBuilder>) -> Self {
@@ -429,16 +428,29 @@ mod tests {
     }
 
     mod polynomial_generation {
-        use crate::Knot;
+        use crate::{polynomial::*, Knot};
         use std::str::FromStr;
 
         #[test]
-        fn basics() {
-            println!("a: {}", Knot::from_str("a").unwrap().bracket_polynomial());
-            println!("A: {}", Knot::from_str("A").unwrap().bracket_polynomial());
-            println!(
-                "trefoil: {}",
-                Knot::from_str("aaa").unwrap().bracket_polynomial()
+        fn bracket() {
+            // println!("a: {}", Knot::from_str("a").unwrap().bracket_polynomial());
+            // println!("A: {}", Knot::from_str("A").unwrap().bracket_polynomial());
+            // println!(
+            //     "trefoil: {}",
+            //     Knot::from_str("aaa").unwrap().bracket_polynomial()
+            // );
+
+            assert_eq!(
+                Knot::from_str("a").unwrap().bracket_polynomial(),
+                Polynomial::from(Term::new(-1, -3))
+            );
+            assert_eq!(
+                Knot::from_str("A").unwrap().bracket_polynomial(),
+                Polynomial::from(Term::new(-1, 3))
+            );
+            assert_eq!(
+                Knot::from_str("aaa").unwrap().bracket_polynomial(),
+                Polynomial::from_vec(vec![Term::new(1, 7), Term::new(-1, 3), Term::new(-1, -5)])
             );
         }
     }

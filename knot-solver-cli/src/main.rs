@@ -12,7 +12,7 @@ struct Opt {
 enum Command {
     #[structopt(name = "bracket")]
     Bracket { braid: String },
-    
+
     #[structopt(name = "beta")]
     Beta { braid: String },
 }

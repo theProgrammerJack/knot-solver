@@ -32,13 +32,13 @@ macro_rules! term {
 pub struct Polynomial(Vec<Term>);
 
 impl Polynomial {
-    fn from_vec(mut terms: Vec<Term>) -> Self {
+    pub fn from_vec(mut terms: Vec<Term>) -> Self {
         terms.retain(|t| !t.is_zero());
         terms.sort_unstable_by(Term::compare_exponent);
         Polynomial(terms)
     }
 
-    fn empty() -> Self {
+    pub fn zero() -> Self {
         Polynomial::from_vec(Vec::new())
     }
 
@@ -107,7 +107,7 @@ impl AddAssign<Term> for Polynomial {
 
 impl Sum for Polynomial {
     fn sum<I: Iterator<Item = Polynomial>>(iter: I) -> Self {
-        let mut p = Polynomial::empty();
+        let mut p = Polynomial::zero();
         for polynomial in iter {
             p += polynomial;
         }
