@@ -51,6 +51,12 @@ impl Polynomial {
     }
 }
 
+impl From<Vec<Term>> for Polynomial {
+    fn from(terms: Vec<Term>) -> Self {
+        Polynomial::from_vec(terms)
+    }
+}
+
 impl IntoIterator for Polynomial {
     type Item = Term;
     type IntoIter = <Vec<Term> as IntoIterator>::IntoIter;
@@ -200,6 +206,14 @@ impl Term {
 
     pub fn compare_exponent(&self, other: &Term) -> Ordering {
         self.exponent.cmp(&other.exponent)
+    }
+
+    pub fn coefficient(&self) -> Rational {
+        self.coefficient
+    }
+
+    pub fn exponent(&self) -> Rational {
+        self.exponent
     }
 }
 

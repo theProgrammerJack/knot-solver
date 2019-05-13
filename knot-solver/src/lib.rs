@@ -79,6 +79,14 @@ impl Knot {
             * Term::new((-1f64).pow(w as i32).signum() as isize, 3 * self.writhe())
     }
 
+    pub fn jones_polynomial(&self) -> Polynomial {
+        self.beta_polynomial()
+            .iter()
+            .map(|t| Term::new(t.coefficient(), t.exponent() / 4))
+            .collect::<Vec<_>>()
+            .into()
+    }
+
     fn from_crossing_builders(mut crossing_builders: Vec<CrossingBuilder>) -> Self {
         let max_column = crossing_builders
             .iter()

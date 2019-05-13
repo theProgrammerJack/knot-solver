@@ -15,6 +15,9 @@ enum Command {
 
     #[structopt(name = "beta")]
     Beta { braid: String },
+
+    #[structopt(name = "jones")]
+    Jones { braid: String },
 }
 
 fn main() {
@@ -28,6 +31,10 @@ fn main() {
         Command::Beta { braid } => println!(
             "{}",
             Knot::from_str(braid.as_str()).unwrap().beta_polynomial()
+        ),
+        Command::Jones { braid } => println!(
+            "{}",
+            Knot::from_str(braid.as_str()).unwrap().jones_polynomial()
         ),
     }
 }
