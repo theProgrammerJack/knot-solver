@@ -12,6 +12,12 @@ struct Opt {
 enum Command {
     #[structopt(name = "bracket")]
     Bracket { braid: String },
+
+    #[structopt(name = "beta")]
+    Beta { braid: String },
+
+    #[structopt(name = "jones")]
+    Jones { braid: String },
 }
 
 fn main() {
@@ -21,6 +27,14 @@ fn main() {
         Command::Bracket { braid } => println!(
             "{}",
             Knot::from_str(braid.as_str()).unwrap().bracket_polynomial()
+        ),
+        Command::Beta { braid } => println!(
+            "{}",
+            Knot::from_str(braid.as_str()).unwrap().beta_polynomial()
+        ),
+        Command::Jones { braid } => println!(
+            "{}",
+            Knot::from_str(braid.as_str()).unwrap().jones_polynomial()
         ),
     }
 }

@@ -52,6 +52,16 @@ impl Knot {
         .collect()
     }
 
+    pub fn writhe(&self) -> isize {
+        self.crossings
+            .iter()
+            .map(|c| match c.orientation {
+                Orientation::Positive => 1,
+                Orientation::Negative => -1,
+            })
+            .sum()
+    }
+
     pub fn bracket_polynomial(&self) -> Polynomial {
         self.resolutions()
             .iter()
@@ -60,6 +70,21 @@ impl Knot {
                     * Term::new(1, *d as isize)
             })
             .sum()
+    }
+
+    pub fn beta_polynomial(&self) -> Polynomial {
+        use num::pow::Pow;
+        let w = self.writhe();
+        self.bracket_polynomial()
+            * Term::new((-1f64).pow(w as i32).signum() as isize, 3 * self.writhe())
+    }
+
+    pub fn jones_polynomial(&self) -> Polynomial {
+        self.beta_polynomial()
+            .iter()
+            .map(|t| Term::new(t.coefficient(), t.exponent() / 4))
+            .collect::<Vec<_>>()
+            .into()
     }
 
     fn from_crossing_builders(mut crossing_builders: Vec<CrossingBuilder>) -> Self {
@@ -411,16 +436,29 @@ mod tests {
     }
 
     mod polynomial_generation {
-        use crate::Knot;
+        use crate::{polynomial::*, Knot};
         use std::str::FromStr;
 
         #[test]
-        fn basics() {
-            println!("a: {}", Knot::from_str("a").unwrap().bracket_polynomial());
-            println!("A: {}", Knot::from_str("A").unwrap().bracket_polynomial());
-            println!(
-                "trefoil: {}",
-                Knot::from_str("aaa").unwrap().bracket_polynomial()
+        fn bracket() {
+            // println!("a: {}", Knot::from_str("a").unwrap().bracket_polynomial());
+            // println!("A: {}", Knot::from_str("A").unwrap().bracket_polynomial());
+            // println!(
+            //     "trefoil: {}",
+            //     Knot::from_str("aaa").unwrap().bracket_polynomial()
+            // );
+
+            assert_eq!(
+                Knot::from_str("a").unwrap().bracket_polynomial(),
+                Polynomial::from(Term::new(-1, -3))
+            );
+            assert_eq!(
+                Knot::from_str("A").unwrap().bracket_polynomial(),
+                Polynomial::from(Term::new(-1, 3))
+            );
+            assert_eq!(
+                Knot::from_str("aaa").unwrap().bracket_polynomial(),
+                Polynomial::from_vec(vec![Term::new(1, 7), Term::new(-1, 3), Term::new(-1, -5)])
             );
         }
     }

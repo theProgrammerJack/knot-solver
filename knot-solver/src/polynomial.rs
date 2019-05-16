@@ -5,17 +5,40 @@ use std::ops::{Add, AddAssign, Mul};
 
 use num::{rational::Rational, One, Zero};
 
+#[macro_export]
+macro_rules! term {
+    ($c:literal A^ $e:literal) => {
+        $crate::polynomial::Term::new($c, $e)
+    };
+    ($cn:literal / $cd:literal A^ $ec:literal / $ed:literal) => {
+        $crate::polynomial::Term::new(
+            num::rational::Rational::new($cn, $cd),
+            num::rational::Rational::new($en, $ed),
+        )
+    };
+    ($c:tt A^ $e:tt) => {
+        $crate::polynomial::Term::new($c, $e)
+    };
+}
+
+// macro_rules! polynomial {
+//     ($c:literal ^ $e:literal $($tail:tt)*) => {
+//         $crate::polynomial::polynomial::from($crate::polynomial::Term::new($c, $e)) + polynomial!($($tail)*)
+//     };
+//     ($c:literal ^ )
+// }
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct Polynomial(Vec<Term>);
 
 impl Polynomial {
-    fn from_vec(mut terms: Vec<Term>) -> Self {
+    pub fn from_vec(mut terms: Vec<Term>) -> Self {
         terms.retain(|t| !t.is_zero());
         terms.sort_unstable_by(Term::compare_exponent);
         Polynomial(terms)
     }
 
-    fn empty() -> Self {
+    pub fn zero() -> Self {
         Polynomial::from_vec(Vec::new())
     }
 
@@ -25,6 +48,12 @@ impl Polynomial {
 
     pub fn remove_zero_terms(&mut self) {
         self.0.retain(|t| !t.is_zero());
+    }
+}
+
+impl From<Vec<Term>> for Polynomial {
+    fn from(terms: Vec<Term>) -> Self {
+        Polynomial::from_vec(terms)
     }
 }
 
@@ -84,7 +113,7 @@ impl AddAssign<Term> for Polynomial {
 
 impl Sum for Polynomial {
     fn sum<I: Iterator<Item = Polynomial>>(iter: I) -> Self {
-        let mut p = Polynomial::empty();
+        let mut p = Polynomial::zero();
         for polynomial in iter {
             p += polynomial;
         }
@@ -177,6 +206,14 @@ impl Term {
 
     pub fn compare_exponent(&self, other: &Term) -> Ordering {
         self.exponent.cmp(&other.exponent)
+    }
+
+    pub fn coefficient(&self) -> Rational {
+        self.coefficient
+    }
+
+    pub fn exponent(&self) -> Rational {
+        self.exponent
     }
 }
 
@@ -390,6 +427,14 @@ mod tests {
         fn is_zero() {
             assert!(Term::new(0, 1).is_zero());
             assert!(Term::new(0, -1).is_zero());
+        }
+
+        #[test]
+        fn macro_create() {
+            assert_eq!(Term::new(3, 3), term!(3 A^ 3));
+            assert_eq!(Term::new(-1, -3), term!(-1 A^ -3));
+            assert_eq!(Term::new(3, 13), term!(3 A^ 13));
+            assert_eq!(Term::new(-30, 56), term!(-30 A^ 56));
         }
     }
 
