@@ -1,17 +1,31 @@
 import pygame
 from math import pi
 from orderedset import OrderedSet
+import sys
+
+
 
 abc = "abcdefghijklmnopqrstuvwxyz"
 a = list(abc)
 
 
-knot = input("knot?")
+#knot = input("knot?")
+knot = str(sys.argv[1])
+
+print(knot)
+if len(knot) == 0:
+	raise ValueError("Must have at least one crossing!")
+
+for c in knot:
+	if c not in abc:
+		raise ValueError("Knot must be letters only!")
+		
+		
 setk = OrderedSet(sorted(knot.lower()))
 
 setk = a[:a.index(setk[len(setk)-1])+1]
 
-print(setk)
+#print(setk)
 
 #setk = a[:(a.index()+1)]
 
