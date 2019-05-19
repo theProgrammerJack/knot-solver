@@ -9,11 +9,20 @@ import sys
 abc = "abcdefghijklmnopqrstuvwxyz"
 a = list(abc)
 
-
-#knot = input("knot?")
-
-knot = str(sys.argv[1])
-
+knot = None
+setk = None
+if len(sys.argv) == 1:
+	knot = input("knot?")
+	setk = OrderedSet(sorted(knot.lower()))
+	setk = a[:a.index(setk[len(setk)-1])+1]
+if len(sys.argv) == 2:
+	knot = str(sys.argv[1])
+	setk = OrderedSet(sorted(knot.lower()))
+	setk = a[:a.index(setk[len(setk)-1])+1]
+if len(sys.argv) == 3: 
+	knot = str(sys.argv[1])
+	setk = a[:int(sys.argv[2])]
+	
 print(knot)
 if len(knot) == 0:
 	raise ValueError("Must have at least one crossing!")
@@ -23,9 +32,6 @@ for c in knot:
 		raise ValueError("Knot must be letters only!")
 		
 		
-setk = OrderedSet(sorted(knot.lower()))
-
-setk = a[:a.index(setk[len(setk)-1])+1]
 
 #print(setk)
 
