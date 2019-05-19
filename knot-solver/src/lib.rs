@@ -2,7 +2,7 @@ use crate::polynomial::{Binomial, Polynomial, Term};
 use bitvec::{BitVec, LittleEndian};
 use std::{collections::HashSet, str::FromStr};
 
-mod polynomial;
+pub mod polynomial;
 
 /// Represents a knot.
 pub struct Knot {
@@ -34,13 +34,13 @@ impl Knot {
                 .zip(bits.iter())
                 .for_each(|(crossing, bit)| {
                     if bit {
-                        diff += 1; // TODO: might need to switch
+                        diff -= 1; // TODO: might need to switch
                         match crossing.orientation {
                             Orientation::Positive => counter.combine(crossing.left, crossing.right),
                             Orientation::Negative => counter.combine(crossing.top, crossing.bottom),
                         }
                     } else {
-                        diff -= 1; // TODO: might need to switch
+                        diff += 1; // TODO: might need to switch
                         match crossing.orientation {
                             Orientation::Positive => counter.combine(crossing.top, crossing.bottom),
                             Orientation::Negative => counter.combine(crossing.left, crossing.right),
@@ -73,16 +73,18 @@ impl Knot {
     }
 
     pub fn beta_polynomial(&self) -> Polynomial {
-        use num::pow::Pow;
         let w = self.writhe();
         self.bracket_polynomial()
-            * Term::new((-1f64).pow(w as i32).signum() as isize, 3 * self.writhe())
+            * Term::new(
+                if w % 2 == 0 { 1 } else { -1 }, /*(-1f64).pow(w as i32).signum() as isize*/
+                -3 * self.writhe(),
+            )
     }
 
     pub fn jones_polynomial(&self) -> Polynomial {
         self.beta_polynomial()
             .iter()
-            .map(|t| Term::new(t.coefficient(), t.exponent() / 4))
+            .map(|t| Term::new(t.coefficient(), t.exponent() / -4))
             .collect::<Vec<_>>()
             .into()
     }
