@@ -2,6 +2,7 @@ import pygame
 from math import pi
 from orderedset import OrderedSet
 import sys
+#TODO: make braids into complete loops 
 
 
 
@@ -10,6 +11,7 @@ a = list(abc)
 
 
 #knot = input("knot?")
+
 knot = str(sys.argv[1])
 
 print(knot)
@@ -17,7 +19,7 @@ if len(knot) == 0:
 	raise ValueError("Must have at least one crossing!")
 
 for c in knot:
-	if c not in abc:
+	if c not in abc and c not in abc.upper():
 		raise ValueError("Knot must be letters only!")
 		
 		
@@ -62,8 +64,9 @@ def earliestEmptyRow():
 for c in knot:
 		col = column(c)
 		for i in range(1, len(knotfield[col])):
-			if((knotfield[col][i] == None) and (col != 0 and knotfield[col-1][i] != None) or (col != len(knotfield)-1 and knotfield[col+1][i] != None)): 
+			if(knotfield[col][i] == None) and ((col != 0 and knotfield[col-1][i] != None) or (col != len(knotfield)-1 and knotfield[col+1][i] != None)): 
 				knotfield[col][i] = 1
+				
 			if(knotfield[col][i] == None and (col == 0 or knotfield[col-1][i] == None) and (col == len(knotfield)-1 or knotfield[col+1][i] == None)): 
 				knotfield[col][i] = c
 				break
@@ -98,6 +101,7 @@ animate = True
 combination = 0
 wombocombo = [0]*len(knot)  
 
+#spacing for the knotfield. 3/4 of page to make room for loops 
 spacingx = size[0] / (len(knotfield)+2) * 3 / 4
 spacingy = size[1] / len(knotfield[0])
 while not done:
@@ -109,17 +113,20 @@ while not done:
   
 	# Clear the screen and set the screen background
 	screen.fill(WHITE)
+	
+	#draw the crossings
 	place = 0
 	for i in range(0, len(knotfield)):
 		for j in range(1, len(knotfield[0])-1):
+			#draw the straight lines when no crossing is present. Check for left or right neighbour crossings
 			if knotfield[i][j] == None or knotfield[i][j] == 1:
-			
 				if i == len(knotfield)-1 or knotfield[i+1][j] == None or knotfield[i+1][j] == 1:
 					pygame.draw.line(screen, (0, 0, 0), [spacingx*(i+2), spacingy*j], [spacingx*(i+2), spacingy*(j+1)], 3)
 					
 				if i == 0 or knotfield[i-1][j] == None or knotfield[i-1][j] == 1:
 					pygame.draw.line(screen, (0, 0, 0), [spacingx*(i+1), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)
 			else:
+				#draw x's
 				if not animate:
 					if knotfield[i][j].isupper():
 						pygame.draw.line(screen, (0,0,0), [spacingx*(i+2), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)
@@ -128,6 +135,7 @@ while not done:
 						pygame.draw.line(screen, (0,0,0), [spacingx*(i+1), spacingy*j], [spacingx*(i+2), spacingy*(j+1)], 3)
 						pygame.draw.line(screen, (255,0,0), [spacingx*(i+2), spacingy*j], [spacingx*(i+1), spacingy*(j+1)], 3)					
 				else: 
+				#draw 0 or infinity resolutions 
 					if wombocombo[place] == 0:
 						pygame.draw.arc(screen, RED, [spacingx*(i+1)-spacingx/6, spacingy*j, spacingx/3, spacingy], 3*pi/2, pi/2, 2)
 						pygame.draw.arc(screen, RED, [spacingx*(i+2)-spacingx/6, spacingy*j, spacingx/3, spacingy], pi/2, 3*pi/2, 2)
@@ -136,7 +144,7 @@ while not done:
 						pygame.draw.arc(screen, RED, [spacingx*(i+1), spacingy*(j+1)-spacingy/6, spacingx, spacingy/3], 0, pi,2)
 					
 					place += 1
-					
+	#pass through all comibinations of resolutions 				
 	if animate:
 		combination+=1
 		if combination >= 2 ** len(knot):
@@ -145,6 +153,18 @@ while not done:
 	grapes = bitfield(combination)
 	for i in range(0, len(grapes)):
 		wombocombo[len(wombocombo)-1-i] = grapes[len(grapes)-1-i]
+	
+	#turn braids and make into loops
+	#braidspacingy = spacingy / (len(set(knot))+1)
+	#braidspacingx = size[0] / (len(set(knot))+1) / 4
+	#for i in range(0,len(set(knot))+1):
+		#draw line on right
+	#	pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, spacingy - braidspacingy*i], [3/4*size[0] + (i) * braidspacingx, size[1] - spacingy + braidspacingy*i], 3)
+		#connect right lines to braids on top
+	#	pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, spacingy - braidspacingy*i], [spacingx*(len(knot)+1-i), spacingy], 3)
+		#connect lines on bottom
+	#	pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, size[1] - spacingy + braidspacingy*i], [spacingx*(len(knot)+1-i), size[1]-spacingy], 3)
+	
 	
 	pygame.display.flip()
  
