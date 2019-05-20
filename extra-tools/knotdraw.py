@@ -9,11 +9,20 @@ import sys
 abc = "abcdefghijklmnopqrstuvwxyz"
 a = list(abc)
 
-
-#knot = input("knot?")
-
-knot = str(sys.argv[1])
-
+knot = None
+setk = None
+if len(sys.argv) == 1:
+	knot = input("knot?")
+	setk = OrderedSet(sorted(knot.lower()))
+	setk = a[:a.index(setk[len(setk)-1])+1]
+if len(sys.argv) == 2:
+	knot = str(sys.argv[1])
+	setk = OrderedSet(sorted(knot.lower()))
+	setk = a[:a.index(setk[len(setk)-1])+1]
+if len(sys.argv) == 3: 
+	knot = str(sys.argv[1])
+	setk = a[:int(sys.argv[2])]
+	
 print(knot)
 if len(knot) == 0:
 	raise ValueError("Must have at least one crossing!")
@@ -23,9 +32,6 @@ for c in knot:
 		raise ValueError("Knot must be letters only!")
 		
 		
-setk = OrderedSet(sorted(knot.lower()))
-
-setk = a[:a.index(setk[len(setk)-1])+1]
 
 #print(setk)
 
@@ -155,15 +161,15 @@ while not done:
 		wombocombo[len(wombocombo)-1-i] = grapes[len(grapes)-1-i]
 	
 	#turn braids and make into loops
-	#braidspacingy = spacingy / (len(set(knot))+1)
-	#braidspacingx = size[0] / (len(set(knot))+1) / 4
-	#for i in range(0,len(set(knot))+1):
+	braidspacingy = spacingy / (len(setk)+1)
+	braidspacingx = size[0] / (len(setk)+1) / 4
+	for i in range(0,len(setk)+1):
 		#draw line on right
-	#	pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, spacingy - braidspacingy*i], [3/4*size[0] + (i) * braidspacingx, size[1] - spacingy + braidspacingy*i], 3)
+		pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, spacingy - braidspacingy*i], [3/4*size[0] + (i) * braidspacingx, size[1] - spacingy + braidspacingy*i], 2)
 		#connect right lines to braids on top
-	#	pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, spacingy - braidspacingy*i], [spacingx*(len(knot)+1-i), spacingy], 3)
+		pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, spacingy - braidspacingy*i], [spacingx*(len(setk)+1-i), spacingy], 1)
 		#connect lines on bottom
-	#	pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, size[1] - spacingy + braidspacingy*i], [spacingx*(len(knot)+1-i), size[1]-spacingy], 3)
+		pygame.draw.line(screen, BLACK, [3/4*size[0] + (i) * braidspacingx, size[1] - spacingy + braidspacingy*i], [spacingx*(len(setk)+1-i), size[1]-spacingy], 1)
 	
 	
 	pygame.display.flip()
