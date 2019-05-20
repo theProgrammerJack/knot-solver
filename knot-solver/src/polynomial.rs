@@ -28,24 +28,29 @@ macro_rules! term {
 //     ($c:literal ^ )
 // }
 
+/// A polynomial with one variable, represented by `A` in this documentation..
 #[derive(Eq, PartialEq, Debug)]
 pub struct Polynomial(Vec<Term>);
 
 impl Polynomial {
+    /// Creates a polynomial from a list of `Term`s.
     pub fn from_vec(mut terms: Vec<Term>) -> Self {
         terms.retain(|t| !t.is_zero());
         terms.sort_unstable_by(Term::compare_exponent);
         Polynomial(terms)
     }
 
+    /// Creates a polynomial that is equal to 0.
     pub fn zero() -> Self {
         Polynomial::from_vec(Vec::new())
     }
 
+    /// Returns a `DoubleEndedIterator` over the terms of the polynomials.
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &Term> + '_ {
         self.0.iter()
     }
 
+    /// Removes all of the `Term`s equal to zero from the polynomial.
     pub fn remove_zero_terms(&mut self) {
         self.0.retain(|t| !t.is_zero());
     }
@@ -155,9 +160,11 @@ impl From<Term> for Polynomial {
     }
 }
 
+/// A binomial.
 pub struct Binomial(pub Term, pub Term);
 
 impl Binomial {
+    /// Raises the binomial to a power and returns the resulting polynomial.
     pub fn expand(self, exp: isize) -> Polynomial {
         Polynomial::from_vec(
             BinomialIter::new(exp)
@@ -167,6 +174,8 @@ impl Binomial {
     }
 }
 
+/// One term consisting of a rational number coefficient and a rational number exponent for the
+/// variable `A`.
 #[derive(Eq, Debug, Clone, Copy)]
 pub struct Term {
     coefficient: Rational,
@@ -174,6 +183,7 @@ pub struct Term {
 }
 
 impl Term {
+    /// Creates a new `Term` with the given coefficient exponent.
     pub fn new<T: Into<Rational>>(coefficient: T, exponent: T) -> Self {
         Term {
             coefficient: coefficient.into(),
@@ -181,6 +191,7 @@ impl Term {
         }
     }
 
+    /// Raises the `Term` to the given power.
     pub fn pow(&self, exponent: isize) -> Self {
         Term {
             coefficient: self.coefficient.pow(exponent as i32),
@@ -188,30 +199,37 @@ impl Term {
         }
     }
 
+    /// Returns whether this `Term` is equal to 0.
     pub fn is_zero(&self) -> bool {
         self.coefficient.is_zero()
     }
 
+    /// Creates a `Term` that is equal to 0.
     pub fn zero() -> Self {
         Term::new(0, 0)
     }
 
+    /// Returns whether this `Term` is equal to 1.
     pub fn is_one(&self) -> bool {
         self.exponent.is_zero() && self.coefficient.is_one()
     }
 
+    /// Creates a `Term` that is equal to 1.
     pub fn one() -> Self {
         Term::new(1, 0)
     }
 
+    /// Compares just the exponents of the two `Term`s.
     pub fn compare_exponent(&self, other: &Term) -> Ordering {
         self.exponent.cmp(&other.exponent)
     }
 
+    /// Returns the coefficient of the `Term`.
     pub fn coefficient(&self) -> Rational {
         self.coefficient
     }
 
+    /// Returns the exponent of the `Term`.
     pub fn exponent(&self) -> Rational {
         self.exponent
     }
@@ -295,12 +313,14 @@ fn binomial_coefficient(n: isize, mut k: isize) -> isize {
     res
 }
 
+/// An iterator over the binomial coefficients for some `n`.
 struct BinomialIter {
     n: isize,
     k: isize,
 }
 
 impl BinomialIter {
+    /// Creates a new `BinomialIter` with the given `n`.
     fn new(n: isize) -> Self {
         BinomialIter { n, k: 0 }
     }

@@ -28,7 +28,8 @@ fn run<P: AsRef<Path>>(path: P) -> Result<(), Box<Error>> {
     let mut wtr = csv::Writer::from_path(path)?;
 
     let knots = vec![
-        "a", "A", "ab", "AB", "Ba", "abc", "abca", "bbac", "abcd", "bacd", "BaCd", "aaBBccDD", "aaa", "AAA"
+        "a", "A", "ab", "AB", "Ba", "abc", "abca", "bbac", "abcd", "bacd", "BaCd", "aaBBccDD",
+        "aaa", "AAA",
     ];
 
     for record in knots

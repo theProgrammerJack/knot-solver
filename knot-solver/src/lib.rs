@@ -52,6 +52,8 @@ impl Knot {
         .collect()
     }
 
+    /// Returns the writhe of the knot, which is the number of positive crossings minus the number
+    /// of negative crossings.
     pub fn writhe(&self) -> isize {
         self.crossings
             .iter()
@@ -62,6 +64,7 @@ impl Knot {
             .sum()
     }
 
+    /// Returns the bracket polynomial of the knot.
     pub fn bracket_polynomial(&self) -> Polynomial {
         self.resolutions()
             .iter()
@@ -72,6 +75,8 @@ impl Knot {
             .sum()
     }
 
+    /// Returns the beta polynomial of the knot, obtained by multiplying the bracket polynomial by
+    /// `(-A)^(-3w)`, where w is the writhe of the knot.
     pub fn beta_polynomial(&self) -> Polynomial {
         let w = self.writhe();
         self.bracket_polynomial()
@@ -81,6 +86,8 @@ impl Knot {
             )
     }
 
+    /// Returns the jones polynomial of the knot, obtained by plugging in `A^(-1/4)` for every `A`
+    /// in the beta polynomial.
     pub fn jones_polynomial(&self) -> Polynomial {
         self.beta_polynomial()
             .iter()
@@ -89,6 +96,7 @@ impl Knot {
             .into()
     }
 
+    /// Creates a knot from a provided list of `CrossingBuilder`s.
     fn from_crossing_builders(mut crossing_builders: Vec<CrossingBuilder>) -> Self {
         let max_column = crossing_builders
             .iter()
@@ -452,15 +460,15 @@ mod tests {
 
             assert_eq!(
                 Knot::from_str("a").unwrap().bracket_polynomial(),
-                Polynomial::from(Term::new(-1, -3))
-            );
-            assert_eq!(
-                Knot::from_str("A").unwrap().bracket_polynomial(),
                 Polynomial::from(Term::new(-1, 3))
             );
             assert_eq!(
+                Knot::from_str("A").unwrap().bracket_polynomial(),
+                Polynomial::from(Term::new(-1, -3))
+            );
+            assert_eq!(
                 Knot::from_str("aaa").unwrap().bracket_polynomial(),
-                Polynomial::from_vec(vec![Term::new(1, 7), Term::new(-1, 3), Term::new(-1, -5)])
+                Polynomial::from_vec(vec![Term::new(1, -7), Term::new(-1, -3), Term::new(-1, 5)])
             );
         }
     }
