@@ -11,6 +11,7 @@ use std::{
 };
 use structopt::StructOpt;
 
+/// Computes polynomial representations of knots specified in braid notation.
 #[derive(StructOpt, Debug)]
 struct Opt {
     #[structopt(subcommand)]
@@ -19,19 +20,35 @@ struct Opt {
 
 #[derive(StructOpt, Debug)]
 enum Command {
+    /// Computes the bracket polynomial of a given knot.
     #[structopt(name = "bracket")]
-    Bracket { braid: String },
+    Bracket {
+        /// The braid representation of the knot.
+        braid: String
+    },
 
+    /// Computes the beta polynomial of a given knot.
     #[structopt(name = "beta")]
-    Beta { braid: String },
+    Beta {
+        /// The braid representation of the knot.
+        braid: String
+    },
 
+    /// Computes the jones polynomial of a given knot.
     #[structopt(name = "jones")]
-    Jones { braid: String },
+    Jones {
+        /// The braid representation of the knot.
+        braid: String
+    },
 
+    /// Generates a csv file with all of the polynomials for all of the given knots.
     #[structopt(name = "csv")]
     Csv {
+        /// Optional output file. The file will be printed to stdout if not specified.
         #[structopt(short = "o", long = "output")]
         output: Option<PathBuf>,
+
+        /// The list of braids to compute for.
         braids: Vec<String>,
     },
 }
