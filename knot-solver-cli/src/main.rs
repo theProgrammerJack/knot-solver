@@ -59,17 +59,17 @@ fn main() {
     match opt.command {
         Command::Bracket { braid } => println!(
             "{}",
-            Knot::from_str(braid.as_str()).unwrap().bracket_polynomial()
+            Knot::from_str(braid.as_str()).expect("Invalid braid").bracket_polynomial()
         ),
         Command::Beta { braid } => println!(
             "{}",
-            Knot::from_str(braid.as_str()).unwrap().beta_polynomial()
+            Knot::from_str(braid.as_str()).expect("Invalid braid").beta_polynomial()
         ),
         Command::Jones { braid } => println!(
             "{}",
-            Knot::from_str(braid.as_str()).unwrap().jones_polynomial()
+            Knot::from_str(braid.as_str()).expect("Invalid braid").jones_polynomial()
         ),
-        Command::Csv { output, braids } => run_csv(output, braids).unwrap(),
+        Command::Csv { output, braids } => run_csv(output, braids).expect("Invalid braid"),
     }
 }
 

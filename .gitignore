@@ -5,3 +5,4 @@ Cargo.lock
 *.iml
 *.csv
 venv
+**/target

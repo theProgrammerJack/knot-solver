@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Mul};
+use rayon::prelude::*;
 
 use num::{rational::Rational, One, Zero};
 
@@ -54,7 +55,29 @@ impl Polynomial {
     pub fn remove_zero_terms(&mut self) {
         self.0.retain(|t| !t.is_zero());
     }
+
+    pub fn par_iter(&self) -> impl IndexedParallelIterator<Item = &Term> + '_ {
+        self.0.par_iter()
+    }
 }
+
+impl IntoParallelIterator for Polynomial {
+    type Iter = <Vec<Term> as IntoParallelIterator>::Iter;
+    type Item = Term;
+
+    fn into_par_iter(self) -> Self::Iter {
+        self.0.into_par_iter()
+    }
+}
+
+//impl IntoParallelIterator for &Polynomial {
+//    type Iter = <Vec<Term> as IntoParallelIterator>::Iter;
+//    type Item = Term;
+//
+//    fn into_par_iter(self) -> Self::Iter {
+//        (&self.0).into_par_iter()
+//    }
+//}
 
 impl From<Vec<Term>> for Polynomial {
     fn from(terms: Vec<Term>) -> Self {

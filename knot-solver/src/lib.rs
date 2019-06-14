@@ -1,6 +1,7 @@
 use crate::polynomial::{Binomial, Polynomial, Term};
 use bitvec::{BitVec, LittleEndian};
 use std::{collections::HashSet, str::FromStr};
+use rayon::prelude::*;
 
 pub mod polynomial;
 
@@ -24,7 +25,7 @@ impl Knot {
     /// Iterates over all possible resolutions of the knot, returning a `Vec<(usize, i16)>` containing the
     /// number of unknots in each and the difference between the number of 0 and infinity resolutions taken.
     pub fn resolutions(&self) -> Vec<(usize, i16)> {
-        let r = 0u128..(2u128.pow(self.num_crossings() as u32));
+        let r = (0u128..(2u128.pow(self.num_crossings() as u32))).into_par_iter();
         r.map(|n| {
             let mut diff: i16 = 0;
             let bits: BitVec<LittleEndian, _> = BitVec::from(&n.to_le_bytes()[..]);
@@ -56,7 +57,7 @@ impl Knot {
     /// of negative crossings.
     pub fn writhe(&self) -> isize {
         self.crossings
-            .iter()
+            .par_iter()
             .map(|c| match c.orientation {
                 Orientation::Positive => 1,
                 Orientation::Negative => -1,
@@ -67,7 +68,7 @@ impl Knot {
     /// Returns the bracket polynomial of the knot.
     pub fn bracket_polynomial(&self) -> Polynomial {
         self.resolutions()
-            .iter()
+            .par_iter()
             .map(|(c, d)| {
                 Binomial(Term::new(-1, 2), Term::new(-1, -2)).expand(*c as isize - 1)
                     * Term::new(1, *d as isize)
@@ -90,7 +91,7 @@ impl Knot {
     /// in the beta polynomial.
     pub fn jones_polynomial(&self) -> Polynomial {
         self.beta_polynomial()
-            .iter()
+            .par_iter()
             .map(|t| Term::new(t.coefficient(), t.exponent() / -4))
             .collect::<Vec<_>>()
             .into()
