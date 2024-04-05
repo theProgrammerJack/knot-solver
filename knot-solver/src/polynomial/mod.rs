@@ -6,6 +6,8 @@ use rayon::prelude::*;
 
 use num::{rational::Rational, One, Zero};
 
+mod new;
+
 #[macro_export]
 macro_rules! term {
     ($c:literal A^ $e:literal) => {
